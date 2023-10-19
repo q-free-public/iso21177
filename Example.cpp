@@ -1,11 +1,11 @@
-#include "ApplicationExample.hh"
+#include "ApplicationElementExample.hh"
 #include "SecuritySubsystemAppAPI.hh"
 
 #include <iostream>
 
 int main() {
     SecuritySubsystemAppAPI secSubsystem;
-    ApplicationExample appEx(secSubsystem);
+    ApplicationElementExample appEx(secSubsystem);
     std::cerr <<"Init DONE\n";
     auto secAPI = appEx.getSecuritySubsystemAppAPI();
     secAPI.AppSecConfigureRequest(

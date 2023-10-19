@@ -1,11 +1,12 @@
 #pragma once
 
-#include "Application.hh"
+#include "ApplicationElementI.hh"
+#include "BaseTypes.hh"
 
-class ApplicationExample : public Application {
+class ApplicationElementExample : public ApplicationElementI {
 public:
 
-    ApplicationExample(SecuritySubsystemAppAPI& secSubsystemAppAPI);
+    ApplicationElementExample(SecuritySubsystemAppAPI& secSubsystemAppAPI);
     void AppSecureConfigureConfirm(
         SecuritySubsystemAppAPI::AppSecConfigureConfirmResult
     );

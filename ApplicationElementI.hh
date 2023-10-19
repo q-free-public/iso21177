@@ -2,9 +2,9 @@
 
 #include "SecuritySubsystemAppAPI.hh"
 
-class Application {
+class ApplicationElementI {
 public:
-    Application(SecuritySubsystemAppAPI& secSubsystemAppAPI);
+    ApplicationElementI(SecuritySubsystemAppAPI& secSubsystemAppAPI);
 
     virtual void AppSecureConfigureConfirm(
         SecuritySubsystemAppAPI::AppSecConfigureConfirmResult
