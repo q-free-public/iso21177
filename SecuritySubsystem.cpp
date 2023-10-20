@@ -19,8 +19,8 @@ void SecuritySubsystem::registerAdaptorLayerSecSubAPI(
 void SecuritySubsystem::registerSecureSessionSecSubAPI(
         std::weak_ptr<SecureSessionSecSubAPI> secSessAPI)
 {
-    secSessAPI = secSessAPI;
-    if (auto sptr = secSessAPI.lock()) {
+    this->secSessAPI = secSessAPI;
+    if (auto sptr = this->secSessAPI.lock()) {
         sptr->registerSecSubCallbacks(
             std::bind(&SecuritySubsystem::SecSessConfigureConfirm, this)
         );
@@ -66,7 +66,9 @@ void SecuritySubsystem::AppSecConfigureRequest(
     }
     if (sessionType == BaseTypes::SessionType::EXTERNAL) {
         // Cryptographic session is required
+        std::cerr << "Will configure external session \n";
         if (auto sptr = secSessAPI.lock()) {
+            std::cerr << "Configuring external session \n";
             BaseTypes::CertPermissionsPattern certPermPattern;
             BaseTypes::TimePeriod inactivityTimeout = 100;
             BaseTypes::TimePeriod sessionTimeout = 100;

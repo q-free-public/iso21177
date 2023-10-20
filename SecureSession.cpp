@@ -22,7 +22,8 @@ void SecureSession::SecSessConfigureRequest(
         const BaseTypes::NameConstraints &nameConstraints,
         const BaseTypes::IssuerConstraints &issuerConstraints)
 {
-    std::cerr << "SecureSessionSecSubAPI::SecSessConfigureRequest" << " APP ID " << appId << "\n";
+    std::cerr << "SecureSession::SecSessConfigureRequest" << " APP ID " << appId << "\n";
+    std::cerr << "SecureSession will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << cryptomaterialHandle << "\n";
     if (secSessConfigureConfirmCB) {
         secSessConfigureConfirmCB();
     }
