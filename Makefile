@@ -1,5 +1,5 @@
 
-
+#CXXFLAGS += -g
 
 #SOURCES := $(wildcard *.cpp)
 SOURCES := \

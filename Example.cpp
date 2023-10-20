@@ -6,12 +6,13 @@
 #include <iostream>
 
 int main() {
-    SecureSession secureSession;
-    SecuritySubsystem secSubsystem;
-    ApplicationElementExample appEx;
+    std::shared_ptr<SecureSession> secureSession(new SecureSession());
+    std::shared_ptr<SecuritySubsystem> secSubsystem(new SecuritySubsystem());
+    std::shared_ptr<ApplicationElementExample> appEx(new ApplicationElementExample());
 
-    appEx.registerSecuritySubsystemAPI(secSubsystem.getAppAPI());
-    
+    appEx->registerSecuritySubsystemAPI(secSubsystem);
+    secSubsystem->registerSecureSessionSecSubAPI(secureSession);
+
     std::cerr <<"Init DONE\n";
 
     auto fn = [](SecuritySubsystemAppAPI& secAPI) {
@@ -32,7 +33,7 @@ int main() {
             13, BaseTypes::TransportMechanismType::UNRELIABLE,
             "Very Secure Certificate");
     };
-    appEx.executeWithSecAPI(fn);
+    appEx->executeWithSecAPI(fn);
 
     return 1;
 }

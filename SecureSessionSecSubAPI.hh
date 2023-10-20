@@ -9,13 +9,11 @@ public:
     typedef std::function<void()>
             SecSessConfigureConfirmCB;
 
-    SecureSessionSecSubAPI();
-
-    void registerSecSubCallbacks(
+    virtual void registerSecSubCallbacks(
         SecSessConfigureConfirmCB
     );
 
-    void SecSessConfigureRequest(
+    virtual void SecSessConfigureRequest(
         const BaseTypes::AppId& appId,
         BaseTypes::Role role,
         const BaseTypes::Socket socket,
@@ -34,8 +32,8 @@ public:
         int64_t maxIncomingSessions,
         const BaseTypes::NameConstraints& nameConstraints,
         const BaseTypes::IssuerConstraints& issuerConstraints
-    );
+    ) = 0;
 
-private:
+protected:
     SecSessConfigureConfirmCB secSessConfigureConfirmCB;
 };

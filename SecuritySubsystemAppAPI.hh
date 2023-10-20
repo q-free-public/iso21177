@@ -23,14 +23,14 @@ public:
         )
     > AppSecStartSessionIndictationCB;
 
-    SecuritySubsystemAppAPI();
+    virtual ~SecuritySubsystemAppAPI() = default;
 
-    void registerAppCallbacks(
+    virtual void registerAppCallbacks(
         AppSecConfigureConfirmCB,
         AppSecStartSessionIndictationCB
     );
 
-    void AppSecConfigureRequest(
+    virtual void AppSecConfigureRequest(
         const BaseTypes::AppId& appId,
         BaseTypes::Role role,
         const BaseTypes::Socket& socket,
@@ -39,9 +39,13 @@ public:
         const BaseTypes::SessionId& sessionId, // only used if role == CLIENT
         BaseTypes::TransportMechanismType transportMechanismType,
         const BaseTypes::CryptomaterialHandle& cryptomaterialHandle
-    );
+    ) = 0;
 
-private:
+protected:
+    AppSecConfigureConfirmCB& getAppSecConfigureConfirmCB();
+    AppSecStartSessionIndictationCB& getAppSecStartSessionIndictationCB();
+
+protected:
     AppSecConfigureConfirmCB appSecConfigureConfirmCB;
     AppSecStartSessionIndictationCB appSecStartSessionIndicatorCB;
 };
