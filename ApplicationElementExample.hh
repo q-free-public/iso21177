@@ -6,7 +6,7 @@
 class ApplicationElementExample : public ApplicationElementI {
 public:
 
-    ApplicationElementExample(SecuritySubsystemAppAPI& secSubsystemAppAPI);
+    ApplicationElementExample();
     void AppSecureConfigureConfirm(
         SecuritySubsystemAppAPI::AppSecConfigureConfirmResult
     );
@@ -15,5 +15,7 @@ public:
         BaseTypes::AppId,
         BaseTypes::SessionId
     );
+
+    void executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI&)>);
 
 };

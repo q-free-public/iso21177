@@ -13,4 +13,8 @@ namespace BaseTypes {
     enum class TransportMechanismType { RELIABLE, UNRELIABLE};
     typedef std::string CryptomaterialHandle;
     typedef int SessionId;
+    typedef std::vector<uint8_t> CertPermissionsPattern;
+    typedef uint64_t TimePeriod;
+    typedef std::string NameConstraints;
+    typedef std::string IssuerConstraints;
 } // namespace BaseTypes

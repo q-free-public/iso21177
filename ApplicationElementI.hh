@@ -1,10 +1,12 @@
 #pragma once
 
+#include <memory>
+
 #include "SecuritySubsystemAppAPI.hh"
 
 class ApplicationElementI {
 public:
-    ApplicationElementI(SecuritySubsystemAppAPI& secSubsystemAppAPI);
+    ApplicationElementI();
 
     virtual void AppSecureConfigureConfirm(
         SecuritySubsystemAppAPI::AppSecConfigureConfirmResult
@@ -15,9 +17,9 @@ public:
         BaseTypes::SessionId
     ) = 0;
 
-    SecuritySubsystemAppAPI& getSecuritySubsystemAppAPI();
+    virtual void registerSecuritySubsystemAPI(std::weak_ptr<SecuritySubsystemAppAPI> ptr);
 
-private:
-    SecuritySubsystemAppAPI& secSubsystemAppAPI;
+protected:
+    std::weak_ptr<SecuritySubsystemAppAPI> secSubsystemAppAPI;
     //AdaptorLayerAppAPI& adaptorLayerAppAPI;
 };

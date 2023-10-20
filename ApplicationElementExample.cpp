@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-ApplicationElementExample::ApplicationElementExample(SecuritySubsystemAppAPI &secSubsystemAppAPI)
-: ApplicationElementI(secSubsystemAppAPI)
+ApplicationElementExample::ApplicationElementExample()
+: ApplicationElementI()
 {
     std::cerr << "ApplicationElementExample constructed\n";
 }
@@ -20,4 +20,11 @@ void ApplicationElementExample::AppSecStartSessionIndictation(
 {
     std::cerr << " ApplicationElementExample::AppSecStartSessionIndictation " 
         << appId << " " << sessionId << "\n";
+}
+
+void ApplicationElementExample::executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI &)> fn)
+{
+    if (auto sptr = secSubsystemAppAPI.lock()) {
+        fn(*sptr);
+    }
 }
