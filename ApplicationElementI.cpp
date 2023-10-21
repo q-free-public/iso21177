@@ -16,6 +16,8 @@ void ApplicationElementI::registerSecuritySubsystemAPI(std::weak_ptr<SecuritySub
             std::bind(&ApplicationElementI::AppSecureConfigureConfirm, this,
                     std::placeholders::_1),
             std::bind(&ApplicationElementI::AppSecStartSessionIndictation, this,
+                    std::placeholders::_1, std::placeholders::_2),
+            std::bind(&ApplicationElementI::AppSecDataConfirm, this,
                     std::placeholders::_1, std::placeholders::_2)
         );
     }

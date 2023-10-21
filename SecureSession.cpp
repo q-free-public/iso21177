@@ -28,3 +28,14 @@ void SecureSession::SecSessConfigureRequest(
         secSessConfigureConfirmCB();
     }
 }
+
+void SecureSession::afterHandshake()
+{
+    BaseTypes::AppId appId = 1;
+    BaseTypes::SessionId sessionId = 1;
+    BaseTypes::Certificate cert = {0x01, 0x03, 0x05, 0x06};
+    if (secSessionStartIndicationCB) {
+        secSessionStartIndicationCB(appId, sessionId,
+                cert);
+    }
+}

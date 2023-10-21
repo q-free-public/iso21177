@@ -22,6 +22,14 @@ void ApplicationElementExample::AppSecStartSessionIndictation(
         << appId << " " << sessionId << "\n";
 }
 
+void ApplicationElementExample::AppSecDataConfirm(
+    SecuritySubsystemAppAPI::AppSecDataConfirmResult result, 
+    const BaseTypes::SignedData &signedData)
+{
+    std::cerr << "ApplicationElementExample::AppSecDataConfirm " 
+    << (int)(result) << " data len: " << signedData.size() << "\n";
+}
+
 void ApplicationElementExample::executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI &)> fn)
 {
     if (auto sptr = secSubsystemAppAPI.lock()) {

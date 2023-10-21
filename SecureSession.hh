@@ -29,6 +29,8 @@ public:
         const BaseTypes::IssuerConstraints& issuerConstraints
     );
 
+    // This should be triggered by TLS handshake completion
+    void afterHandshake();
 
 private:
 };

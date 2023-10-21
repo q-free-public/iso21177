@@ -17,4 +17,10 @@ namespace BaseTypes {
     typedef uint64_t TimePeriod;
     typedef std::string NameConstraints;
     typedef std::string IssuerConstraints;
+    typedef std::vector<uint8_t> Data;
+    typedef std::string SigningParameters;
+    
+    // 1609.2 Types
+    typedef std::vector<uint8_t> Certificate;
+    typedef std::vector<uint8_t> SignedData;
 } // namespace BaseTypes

@@ -22,19 +22,36 @@ void SecuritySubsystem::registerSecureSessionSecSubAPI(
     this->secSessAPI = secSessAPI;
     if (auto sptr = this->secSessAPI.lock()) {
         sptr->registerSecSubCallbacks(
-            std::bind(&SecuritySubsystem::SecSessConfigureConfirm, this)
+            std::bind(&SecuritySubsystem::SecSessConfigureConfirm, this),
+            std::bind(&SecuritySubsystem::SecSessStartIndication, this,
+                    std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3
+            )
         );
     }
-}
-
-std::weak_ptr<SecuritySubsystemAppAPI> SecuritySubsystem::getAppAPI()
-{
-    return shared_from_this();
 }
 
 void SecuritySubsystem::SecSessConfigureConfirm()
 {
     std::cerr << "SecuritySubsystem::SecSessConfigureConfirm" << "\n";
+}
+
+void SecuritySubsystem::SecSessStartIndication(
+        const BaseTypes::AppId & appId,
+        const BaseTypes::SessionId & sessId,
+        const BaseTypes::Certificate & cert)
+{
+    std::cerr << "SecuritySubsystem::SecSessStartIndication" << "\n";
+    // TODO: check access control policy
+    // Access control policy == SUCCESS
+    if (true /* role == SERVER */) {
+        //AppSecStartSessionIndication
+    }
+    // Access control policy == More authentication required
+    // ????
+    // Access control policy == FAILURE
+    // End Session 
+
 }
 
 void SecuritySubsystem::AppSecConfigureRequest(
@@ -87,5 +104,20 @@ void SecuritySubsystem::AppSecConfigureRequest(
                 issuerConstraints
             );
         }
+    }
+}
+
+void SecuritySubsystem::AppSecDataRequest(
+        const BaseTypes::AppId &appId,
+        const BaseTypes::SessionId &sessionId,
+        const BaseTypes::CryptomaterialHandle &cryptoHandle,
+        const BaseTypes::Data &data,
+        const BaseTypes::SigningParameters &signingParams)
+{
+    std::cerr << "SecuritySubsystem::AppSecDataRequest " << appId << "\n";
+    // TODO: Call SecEnt to sign the data
+    SecuritySubsystemAppAPI::AppSecDataConfirmResult result = SecuritySubsystemAppAPI::AppSecDataConfirmResult::SUCCESS;
+    if (appSecDataConfirmCB) {
+        appSecDataConfirmCB(result, data);
     }
 }

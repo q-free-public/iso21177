@@ -6,15 +6,18 @@
 #include "AdaptorLayerSecSubAPI.hh"
 #include "SecureSessionSecSubAPI.hh"
 
-class SecuritySubsystem : public std::enable_shared_from_this<SecuritySubsystem>,
-        public SecuritySubsystemAppAPI {
+class SecuritySubsystem : public SecuritySubsystemAppAPI {
 public:
     SecuritySubsystem();
     void registerAdaptorLayerSecSubAPI(std::weak_ptr<AdaptorLayerSecSubAPI> );
     void registerSecureSessionSecSubAPI(std::weak_ptr<SecureSessionSecSubAPI>);
-    std::weak_ptr<SecuritySubsystemAppAPI> getAppAPI();
 
     virtual void SecSessConfigureConfirm();
+    virtual void SecSessStartIndication(
+        const BaseTypes::AppId&,
+        const BaseTypes::SessionId&,
+        const BaseTypes::Certificate&
+    );
 
     virtual void AppSecConfigureRequest(
         const BaseTypes::AppId& appId,
@@ -25,6 +28,14 @@ public:
         const BaseTypes::SessionId& sessionId, // only used if role == CLIENT
         BaseTypes::TransportMechanismType transportMechanismType,
         const BaseTypes::CryptomaterialHandle& cryptomaterialHandle
+    );
+
+    virtual void AppSecDataRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::CryptomaterialHandle& cryptoHandle,
+        const BaseTypes::Data& data,
+        const BaseTypes::SigningParameters& signingParams
     );
     
 private:

@@ -17,6 +17,11 @@ public:
         BaseTypes::SessionId
     ) = 0;
 
+    virtual void AppSecDataConfirm(
+        SecuritySubsystemAppAPI::AppSecDataConfirmResult,
+        const BaseTypes::SignedData&
+    ) = 0;
+
     virtual void registerSecuritySubsystemAPI(std::weak_ptr<SecuritySubsystemAppAPI> ptr);
 
 protected:

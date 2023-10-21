@@ -3,7 +3,9 @@
 #include <iostream>
 
 void SecureSessionSecSubAPI::registerSecSubCallbacks(
-        SecSessConfigureConfirmCB secSessConfigureConfirmCB
-){
-    secSessConfigureConfirmCB = secSessConfigureConfirmCB;
+    SecSessConfigureConfirmCB secSessConfigureConfirmCB,
+    SecSessionStartIndicationCB secSessionStartIndicationCB)
+{
+    this->secSessConfigureConfirmCB = secSessConfigureConfirmCB;
+    this->secSessionStartIndicationCB = secSessionStartIndicationCB;
 }

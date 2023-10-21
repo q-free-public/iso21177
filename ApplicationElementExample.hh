@@ -16,6 +16,11 @@ public:
         BaseTypes::SessionId
     );
 
+    void AppSecDataConfirm(
+        SecuritySubsystemAppAPI::AppSecDataConfirmResult,
+        const BaseTypes::SignedData&
+    );
+
     void executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI&)>);
 
 };

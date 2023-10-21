@@ -11,5 +11,5 @@ public:
         const BaseTypes::AppId& appId,
         const BaseTypes::SessionId& sessionId,
 
-    )
+    );
 };

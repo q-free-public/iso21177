@@ -4,10 +4,12 @@
 
 void SecuritySubsystemAppAPI::registerAppCallbacks(
         AppSecConfigureConfirmCB appSecConfigCB,
-        AppSecStartSessionIndictationCB appSecStartSessionCB)
+        AppSecStartSessionIndictationCB appSecStartSessionCB,
+        AppSecDataConfirmCB appSecDataConfirmCB)
 {
-    appSecConfigureConfirmCB = appSecConfigCB;
-    appSecStartSessionIndicatorCB = appSecStartSessionCB;
+    this->appSecConfigureConfirmCB = appSecConfigCB;
+    this->appSecStartSessionIndicatorCB = appSecStartSessionCB;
+    this->appSecDataConfirmCB = appSecDataConfirmCB;
     std::cerr << "Callbacks registered\n";
 }
 

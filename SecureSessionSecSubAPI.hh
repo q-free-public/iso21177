@@ -9,8 +9,16 @@ public:
     typedef std::function<void()>
             SecSessConfigureConfirmCB;
 
+    typedef std::function<void(
+                const BaseTypes::AppId&,
+                const BaseTypes::SessionId&,
+                const BaseTypes::Certificate&
+        )>
+            SecSessionStartIndicationCB;
+
     virtual void registerSecSubCallbacks(
-        SecSessConfigureConfirmCB
+        SecSessConfigureConfirmCB,
+        SecSessionStartIndicationCB
     );
 
     virtual void SecSessConfigureRequest(
@@ -36,4 +44,5 @@ public:
 
 protected:
     SecSessConfigureConfirmCB secSessConfigureConfirmCB;
+    SecSessionStartIndicationCB secSessionStartIndicationCB; 
 };
