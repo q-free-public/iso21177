@@ -3,12 +3,15 @@
 #include <memory>
 
 #include "SecureSessionSecSubAPI.hh"
+#include "SecureSessionALAPI.hh"
 
-class SecureSession : public SecureSessionSecSubAPI {
+class SecureSession : 
+        public SecureSessionSecSubAPI,
+        public SecureSessionALAPI {
 public:
     SecureSession();
 
-    void SecSessConfigureRequest(
+    virtual void SecSessConfigureRequest(
         const BaseTypes::AppId& appId,
         BaseTypes::Role role,
         const BaseTypes::Socket socket,
@@ -27,6 +30,17 @@ public:
         int64_t maxIncomingSessions,
         const BaseTypes::NameConstraints& nameConstraints,
         const BaseTypes::IssuerConstraints& issuerConstraints
+    );
+
+    virtual void ALSessDataRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::Data& apduToSend
+    );
+
+    virtual void ALSessEndSessionRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId
     );
 
     // This should be triggered by TLS handshake completion

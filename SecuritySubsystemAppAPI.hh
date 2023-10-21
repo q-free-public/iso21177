@@ -22,7 +22,6 @@ public:
 
     virtual ~SecuritySubsystemAppAPI() = default;
 
-
     virtual void AppSecConfigureRequest(
         const BaseTypes::AppId& appId,
         BaseTypes::Role role,

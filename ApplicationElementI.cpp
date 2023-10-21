@@ -22,3 +22,13 @@ void ApplicationElementI::registerSecuritySubsystemAPI(std::weak_ptr<SecuritySub
         );
     }
 }
+
+void ApplicationElementI::registerAdaptorLayerAPI(std::weak_ptr<AdaptorLayerAppAPI> ptr)
+{
+    aLAppAPI = ptr;
+    if (auto sptr = aLAppAPI.lock()) {
+        sptr->registerAppCallbacks(
+            std::bind(&ApplicationElementI::AppALDataConfirm, this)
+        );
+    }
+}

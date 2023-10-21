@@ -1,15 +1,15 @@
 
 #CXXFLAGS += -g
 
-#SOURCES := $(wildcard *.cpp)
-SOURCES := \
-	ApplicationElementI.cpp \
-	Example.cpp \
-	ApplicationElementExample.cpp \
-	SecuritySubsystemAppAPI.cpp \
-	SecuritySubsystem.cpp \
-	SecureSession.cpp \
-	SecureSessionSecSubAPI.cpp
+SOURCES := $(wildcard *.cpp)
+# SOURCES := \
+# 	ApplicationElementI.cpp \
+# 	Example.cpp \
+# 	ApplicationElementExample.cpp \
+# 	SecuritySubsystemAppAPI.cpp \
+# 	SecuritySubsystem.cpp \
+# 	SecureSession.cpp \
+# 	SecureSessionSecSubAPI.cpp
 
 OBJECTS := $(patsubst %.cpp, %.o, $(SOURCES))
 

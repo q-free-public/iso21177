@@ -29,6 +29,23 @@ void SecureSession::SecSessConfigureRequest(
     }
 }
 
+void SecureSession::ALSessDataRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId, const BaseTypes::Data &apduToSend)
+{
+    std::cerr << "SecureSession::ALSessDataRequest" << "\n";
+    if (aLSessDataConfirmCB) {
+        aLSessDataConfirmCB();
+    } else {
+        std::cerr << "!!!! aLSessDataConfirmCB unregistered !!!!!\n";
+    }
+    //TODO: fragments and cryptographically protects
+    // passes to the network for transmission
+}
+
+void SecureSession::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)
+{
+    std::cerr << "SecureSession::ALSessEndSessionRequest" << "\n";
+}
+
 void SecureSession::afterHandshake()
 {
     BaseTypes::AppId appId = 1;

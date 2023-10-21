@@ -21,6 +21,8 @@ public:
         const BaseTypes::SignedData&
     );
 
-    void executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI&)>);
+    void AppALDataConfirm();
 
+    void executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI&)>);
+    void executeWithALAPI(std::function<void(AdaptorLayerAppAPI&)>);
 };

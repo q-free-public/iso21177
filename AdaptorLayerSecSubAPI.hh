@@ -8,4 +8,9 @@
 
 class AdaptorLayerSecSubAPI {
 public:
+    
+    virtual void registerAppCallBacks(
+    );
+
+protected:
 };

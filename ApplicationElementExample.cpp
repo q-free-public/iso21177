@@ -30,9 +30,25 @@ void ApplicationElementExample::AppSecDataConfirm(
     << (int)(result) << " data len: " << signedData.size() << "\n";
 }
 
+void ApplicationElementExample::AppALDataConfirm()
+{
+    std::cerr << "ApplicationElementExample::AppALDataConfirm" << "\n";
+}
+
 void ApplicationElementExample::executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI &)> fn)
 {
     if (auto sptr = secSubsystemAppAPI.lock()) {
         fn(*sptr);
+    } else {
+        std::cerr << "!!!!! Sec Sub App API unregistered !!!!\n";
+    }
+}
+
+void ApplicationElementExample::executeWithALAPI(std::function<void(AdaptorLayerAppAPI &)> fn)
+{
+    if (auto sptr = aLAppAPI.lock()) {
+        fn(*sptr);
+    } else {
+        std::cerr << "!!!!! AL App API unregistered !!!!\n";
     }
 }
