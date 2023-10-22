@@ -56,3 +56,14 @@ void SecureSession::afterHandshake()
                 cert);
     }
 }
+
+void SecureSession::receiveData(const std::vector<uint8_t> &data)
+{
+    // Check if session timed out
+    if (!aLSessDataIndicationCB) {
+        std::cerr << "!!!!! aLSessDataIndicationCB not registered\n";
+    }
+    BaseTypes::AppId appId = 10;
+    BaseTypes::SessionId sessionId = 11;
+    aLSessDataIndicationCB(appId, sessionId, data);
+}

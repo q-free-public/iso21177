@@ -17,10 +17,21 @@ public:
     typedef std::function<void()>
             AppALDataConfirmCB;
     
+
+    typedef std::function<
+        void(
+            const BaseTypes::AppId&,
+            const BaseTypes::SessionId&,
+            const BaseTypes::Data&
+        )
+    > AppALDataIndicationCB;
+
     virtual void registerAppCallbacks(
-        AppALDataConfirmCB
+        AppALDataConfirmCB,
+        AppALDataIndicationCB
     );
 
 protected:
     AppALDataConfirmCB appALDataConfirmCB;
+    AppALDataIndicationCB appALDataIndicationCB;
 };

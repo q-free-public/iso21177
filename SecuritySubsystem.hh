@@ -37,6 +37,14 @@ public:
         const BaseTypes::Data& data,
         const BaseTypes::SigningParameters& signingParams
     );
+
+    virtual void AppSecIncomingRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::Data& apdu,
+        bool isIeee1609Dot2Data,
+        const BaseTypes::SignedDataVerificationParams& signVerParams
+    );
     
 private:
     std::weak_ptr<AdaptorLayerSecSubAPI> alAPI;

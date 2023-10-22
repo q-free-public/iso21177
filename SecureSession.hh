@@ -45,6 +45,8 @@ public:
 
     // This should be triggered by TLS handshake completion
     void afterHandshake();
+    // This is what comes from a socket
+    void receiveData(const std::vector<uint8_t>& data);
 
 private:
 };

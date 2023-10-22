@@ -36,6 +36,14 @@ void AdaptorLayer::ALSessDataIndication(
     const BaseTypes::Data &alpduReceived)
 {
     std::cerr << "AdaptorLayer::ALSessDataIndication" << "\n";
+    // TODO: check type of received data
+    // 1. TLS Handshake proxy PDU - unsupported
+    // 2. Access Control PDU - TODO: implement
+    // 3. APDU : Application data
+    if (!appALDataIndicationCB) {
+        std::cerr << "!!!!!! appALDataIndicationCB noet registered !!!\n";
+    }
+    appALDataIndicationCB(appId, sessionId, alpduReceived);
 }
 
 void AdaptorLayer::ALSessEndSessionConfirm()

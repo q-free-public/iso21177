@@ -35,6 +35,27 @@ void ApplicationElementExample::AppALDataConfirm()
     std::cerr << "ApplicationElementExample::AppALDataConfirm" << "\n";
 }
 
+void ApplicationElementExample::AppALDataIndication(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SessionId &sessionId,
+    const BaseTypes::Data &data)
+{
+    std::cerr << "ApplicationElementExample::AppALDataIndication\n";
+    // TODO: Optional: pre-processing checks (e.2.i p.23)
+    if (auto sptr = secSubsystemAppAPI.lock()) {
+        sptr->AppSecIncomingRequest(appId, sessionId, data, true, {});
+    }
+}
+
+void ApplicationElementExample::AppSecIncomingConfirm(SecuritySubsystemAppAPI::AppSecIncomingConfirmResult result)
+{
+    typedef SecuritySubsystemAppAPI::AppSecIncomingConfirmResult Result;
+    std::cerr << "ApplicationElementExample::AppSecIncomingConfirm " << (int)(result) << "\n";
+    if (result == Result::SUCCESS) {
+        std::cerr << "Received APDU is verified and clear for usage\n";
+    }
+}
+
 void ApplicationElementExample::executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI &)> fn)
 {
     if (auto sptr = secSubsystemAppAPI.lock()) {

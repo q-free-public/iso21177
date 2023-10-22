@@ -23,7 +23,17 @@ public:
         const BaseTypes::SignedData&
     ) = 0;
 
+    virtual void AppALDataIndication(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::Data& data
+    ) = 0;
+
     virtual void AppALDataConfirm() = 0;
+
+    virtual void AppSecIncomingConfirm(
+        SecuritySubsystemAppAPI::AppSecIncomingConfirmResult
+    ) = 0;
 
     virtual void registerSecuritySubsystemAPI(std::weak_ptr<SecuritySubsystemAppAPI> ptr);
     virtual void registerAdaptorLayerAPI(std::weak_ptr<AdaptorLayerAppAPI> ptr);

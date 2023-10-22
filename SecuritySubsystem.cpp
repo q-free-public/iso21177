@@ -121,3 +121,36 @@ void SecuritySubsystem::AppSecDataRequest(
         appSecDataConfirmCB(result, data);
     }
 }
+
+void SecuritySubsystem::AppSecIncomingRequest(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SessionId &sessionId,
+    const BaseTypes::Data &apdu,
+    bool isIeee1609Dot2Data,
+    const BaseTypes::SignedDataVerificationParams &signVerParams)
+{
+    typedef SecuritySubsystemAppAPI::AppSecIncomingConfirmResult Result;
+    Result result = Result::SUCCESS;
+    bool dataIsSignedType = true;
+    if (!isIeee1609Dot2Data) {
+        // Not supported now
+        result = Result::INVALID_APDU_AS_PER_ACCESS_CONTROL_POLICY_NO_REQUEST_SENT;
+    } else{
+        if (dataIsSignedType) {
+            // TODO: verify with sec_ent - if failed, set result
+        } else {
+            // TODO: type unsigned is okay, but other (e.g. encrypted) are not
+            bool dataIsUnsignedType = true;
+            if (!dataIsUnsignedType) {
+                result = Result::INVALID_IEEE1609DOT2DATA_TYPE;
+            }
+        }
+    }
+    if (result == Result::SUCCESS) {
+        // TODO: apply the access control policy
+    }
+    if (!appSecIncomingConfirmCB) {
+        std::cerr << "!!!!! appSecIncomingConfirmCB unregistered !!!\n";
+    }
+    appSecIncomingConfirmCB(result);
+}

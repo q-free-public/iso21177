@@ -23,4 +23,5 @@ namespace BaseTypes {
     // 1609.2 Types
     typedef std::vector<uint8_t> Certificate;
     typedef std::vector<uint8_t> SignedData;
+    typedef std::vector<uint8_t> SignedDataVerificationParams;
 } // namespace BaseTypes

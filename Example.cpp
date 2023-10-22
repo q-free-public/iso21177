@@ -68,5 +68,7 @@ int main() {
             ieee1609Data);
     });
 
+    secureSession->receiveData({0x01, 0x03, 0x07});
+
     return 1;
 }

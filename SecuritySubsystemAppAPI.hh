@@ -19,6 +19,13 @@ public:
         SUCCESS,
         FAILURE
     };
+    enum class AppSecIncomingConfirmResult {
+        SUCCESS,
+        INVALID_IEEE1609DOT2DATA_TYPE,
+        INVALID_SIGNED_IEEE1609DOT2_DATA,
+        INVALID_APDU_AS_PER_ACCESS_CONTROL_POLICY_REQUEST_SENT,
+        INVALID_APDU_AS_PER_ACCESS_CONTROL_POLICY_NO_REQUEST_SENT
+    };
 
     virtual ~SecuritySubsystemAppAPI() = default;
 
@@ -60,10 +67,24 @@ public:
     > AppSecDataConfirmCB;
 
 
+    virtual void AppSecIncomingRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::Data& apdu,
+        bool isIeee1609Dot2Data,
+        const BaseTypes::SignedDataVerificationParams& signVerParams
+    ) = 0;
+    typedef std::function<
+        void(
+            AppSecIncomingConfirmResult
+        )
+    > AppSecIncomingConfirmCB;
+
     virtual void registerAppCallbacks(
         AppSecConfigureConfirmCB,
         AppSecStartSessionIndictationCB,
-        AppSecDataConfirmCB
+        AppSecDataConfirmCB,
+        AppSecIncomingConfirmCB
     );
 
 protected:
@@ -74,4 +95,5 @@ protected:
     AppSecConfigureConfirmCB appSecConfigureConfirmCB;
     AppSecStartSessionIndictationCB appSecStartSessionIndicatorCB;
     AppSecDataConfirmCB appSecDataConfirmCB;
+    AppSecIncomingConfirmCB appSecIncomingConfirmCB;
 };

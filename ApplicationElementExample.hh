@@ -7,21 +7,31 @@ class ApplicationElementExample : public ApplicationElementI {
 public:
 
     ApplicationElementExample();
-    void AppSecureConfigureConfirm(
+    virtual void AppSecureConfigureConfirm(
         SecuritySubsystemAppAPI::AppSecConfigureConfirmResult
     );
 
-    void AppSecStartSessionIndictation(
+    virtual void AppSecStartSessionIndictation(
         BaseTypes::AppId,
         BaseTypes::SessionId
     );
 
-    void AppSecDataConfirm(
+    virtual void AppSecDataConfirm(
         SecuritySubsystemAppAPI::AppSecDataConfirmResult,
         const BaseTypes::SignedData&
     );
 
-    void AppALDataConfirm();
+    virtual void AppALDataConfirm();
+
+    virtual void AppALDataIndication(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::Data& data
+    );
+
+    virtual void AppSecIncomingConfirm(
+        SecuritySubsystemAppAPI::AppSecIncomingConfirmResult
+    );
 
     void executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI&)>);
     void executeWithALAPI(std::function<void(AdaptorLayerAppAPI&)>);
