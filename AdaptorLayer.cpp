@@ -51,6 +51,27 @@ void AdaptorLayer::ALSessEndSessionConfirm()
     std::cerr << "AdaptorLayer::ALSessEndSessionConfirm" << "\n";
 }
 
+void AdaptorLayer::SecALAccessControlRequest(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SessionId &sessionId)
+{
+    std::cerr << "AdaptorLayer::SecALAccessControlRequest\n";
+}
+
+void AdaptorLayer::SecALEndSessionRequest(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SessionId &sessionId)
+{
+    std::cerr << "AdaptorLayer::SecALEndSessionRequest\n";
+    if (!secALEndSessionConfirmCB) {
+        std::cerr << "!!!!! secALEndSessionConfirmCB unregistered\n";
+    }
+    secALEndSessionConfirmCB();
+    if (auto sptr = secSessALAPI.lock()) {
+        sptr->ALSessEndSessionRequest(appId, sessionId);
+    }
+}
+
 void AdaptorLayer::registerSecSessAPI(std::weak_ptr<SecureSessionALAPI> ptr)
 {
     this->secSessALAPI = ptr;

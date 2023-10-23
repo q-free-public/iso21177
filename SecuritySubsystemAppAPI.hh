@@ -80,11 +80,40 @@ public:
         )
     > AppSecIncomingConfirmCB;
 
+    virtual void AppSecEndSessionRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId
+    ) = 0;
+    typedef std::function<
+        void(
+            const BaseTypes::AppId&,
+            const BaseTypes::SessionId&,
+            BaseTypes::EnumeratedSecLayer
+        )
+    > AppSecEndSessionIndicationCB;
+
+    virtual void AppSecDeactivateRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SecureSessionInstanceId& secureSessionId
+    ) = 0;
+    typedef std::function<void()
+    > AppSecDeactivateConfirmCB;
+
+    typedef std::function<
+        void(
+            const BaseTypes::AppId& appId,
+            const BaseTypes::SecureSessionInstanceId& secureSessionId
+        )
+    > AppSecDeactivateIndicationCB;
+
     virtual void registerAppCallbacks(
         AppSecConfigureConfirmCB,
         AppSecStartSessionIndictationCB,
         AppSecDataConfirmCB,
-        AppSecIncomingConfirmCB
+        AppSecIncomingConfirmCB,
+        AppSecEndSessionIndicationCB,
+        AppSecDeactivateConfirmCB,
+        AppSecDeactivateIndicationCB
     );
 
 protected:
@@ -96,4 +125,7 @@ protected:
     AppSecStartSessionIndictationCB appSecStartSessionIndicatorCB;
     AppSecDataConfirmCB appSecDataConfirmCB;
     AppSecIncomingConfirmCB appSecIncomingConfirmCB;
+    AppSecEndSessionIndicationCB appSecEndSessionIndicationCB;
+    AppSecDeactivateConfirmCB appSecDeactivateConfirmCB;
+    AppSecDeactivateIndicationCB appSecDeactivateIndicationCB;
 };

@@ -20,7 +20,12 @@ void ApplicationElementI::registerSecuritySubsystemAPI(std::weak_ptr<SecuritySub
             std::bind(&ApplicationElementI::AppSecDataConfirm, this,
                     std::placeholders::_1, std::placeholders::_2),
             std::bind(&ApplicationElementI::AppSecIncomingConfirm, this,
-                    std::placeholders::_1)
+                    std::placeholders::_1),
+            std::bind(&ApplicationElementI::AppSecEndSessionIndication, this,
+                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+            std::bind(&ApplicationElementI::AppSecDeactivateConfirm, this),
+            std::bind(&ApplicationElementI::AppSecDeactivateIndication, this,
+                    std::placeholders::_1, std::placeholders::_2)
         );
     }
 }

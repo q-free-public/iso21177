@@ -33,6 +33,18 @@ public:
         SecuritySubsystemAppAPI::AppSecIncomingConfirmResult
     );
 
+    virtual void AppSecEndSessionIndication(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& secureSessionId,
+        BaseTypes::EnumeratedSecLayer originatingLayer
+    );
+    virtual void AppSecDeactivateConfirm();
+    virtual void AppSecDeactivateIndication(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SecureSessionInstanceId& secureSessionId
+    );
+
+
     void executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI&)>);
     void executeWithALAPI(std::function<void(AdaptorLayerAppAPI&)>);
 };

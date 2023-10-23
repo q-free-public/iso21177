@@ -19,6 +19,8 @@ namespace BaseTypes {
     typedef std::string IssuerConstraints;
     typedef std::vector<uint8_t> Data;
     typedef std::string SigningParameters;
+    enum class EnumeratedSecLayer { SECURITY_SUBSYSTEM, SECURE_SESSION_SERVICE, APPLICATION};
+    typedef int SecureSessionInstanceId;
     
     // 1609.2 Types
     typedef std::vector<uint8_t> Certificate;

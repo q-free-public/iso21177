@@ -45,6 +45,29 @@ public:
         bool isIeee1609Dot2Data,
         const BaseTypes::SignedDataVerificationParams& signVerParams
     );
+
+    virtual void AppSecEndSessionRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId
+    );
+
+    virtual void AppSecDeactivateRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SecureSessionInstanceId& secureSessionId
+    );
+
+    virtual void SecALAccessControlConfirm();
+    virtual void SecALAccessControlIndictation(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::Data& data
+    );
+    virtual void SecALEndSessionConfirm();
+
+    virtual void forceEndSession(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId
+    );
     
 private:
     std::weak_ptr<AdaptorLayerSecSubAPI> alAPI;

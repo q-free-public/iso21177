@@ -35,6 +35,17 @@ public:
         SecuritySubsystemAppAPI::AppSecIncomingConfirmResult
     ) = 0;
 
+    virtual void AppSecEndSessionIndication(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& secureSessionId,
+        BaseTypes::EnumeratedSecLayer originatingLayer
+    ) = 0;
+    virtual void AppSecDeactivateConfirm() = 0;
+    virtual void AppSecDeactivateIndication(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SecureSessionInstanceId& secureSessionId
+    ) = 0;
+
     virtual void registerSecuritySubsystemAPI(std::weak_ptr<SecuritySubsystemAppAPI> ptr);
     virtual void registerAdaptorLayerAPI(std::weak_ptr<AdaptorLayerAppAPI> ptr);
 

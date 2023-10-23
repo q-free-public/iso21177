@@ -44,6 +44,10 @@ void SecureSession::ALSessDataRequest(const BaseTypes::AppId &appId, const BaseT
 void SecureSession::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)
 {
     std::cerr << "SecureSession::ALSessEndSessionRequest" << "\n";
+    if (!aLSessEndSessionConfirmCB) {
+        std::cerr << "!!!!!!! aLSessEndSessionConfirmCB unregistered\n";
+    }
+    aLSessEndSessionConfirmCB();
 }
 
 void SecureSession::afterHandshake()

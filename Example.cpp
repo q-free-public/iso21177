@@ -15,6 +15,7 @@ int main() {
     appEx->registerSecuritySubsystemAPI(secSubsystem);
     appEx->registerAdaptorLayerAPI(adaptorLayer);
     secSubsystem->registerSecureSessionSecSubAPI(secureSession);
+    secSubsystem->registerAdaptorLayerSecSubAPI(adaptorLayer);
     adaptorLayer->registerSecSessAPI(secureSession);
 
     std::cerr <<"Init DONE\n";
@@ -44,10 +45,12 @@ int main() {
             cryptoHandle);
     };
     appEx->executeWithSecAPI(fn);
+    std::cerr << "=====> Secure session handshake finished by a client\n";
     secureSession->afterHandshake();
 
     // Sign data before sending 
     // (it is also possible to send data without signing)
+    std::cerr << "=====> App Signing data\n";
     appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secAPI){
         secAPI.AppSecDataRequest(
             appId,
@@ -60,6 +63,7 @@ int main() {
 
     // This is either a secured data, or unsecure data
     // but IEEE1609.2Data in either case
+    std::cerr << "=====> App sending data\n";
     BaseTypes::Data ieee1609Data = {0x05, 0x06};
     appEx->executeWithALAPI([&](AdaptorLayerAppAPI& alAppAPI){
         alAppAPI.AppALDataRequest(
@@ -68,7 +72,14 @@ int main() {
             ieee1609Data);
     });
 
+    std::cerr << "=====> Secure session receive data\n";
     secureSession->receiveData({0x01, 0x03, 0x07});
+
+    
+    std::cerr << "=====> App triggering End session\n";
+    appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secSubAPI){
+        secSubAPI.AppSecEndSessionRequest(appId, sessionId);
+    });
 
     return 1;
 }

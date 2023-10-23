@@ -14,6 +14,14 @@ void SecuritySubsystem::registerAdaptorLayerSecSubAPI(
         std::weak_ptr<AdaptorLayerSecSubAPI> aLSecSubAPI)
 {
     alAPI = aLSecSubAPI;
+    if (auto sptr = alAPI.lock()) {
+        sptr->registerAppCallBacks(
+            std::bind(&SecuritySubsystem::SecALAccessControlConfirm, this),
+            std::bind(&SecuritySubsystem::SecALAccessControlIndictation, this,
+                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+            std::bind(&SecuritySubsystem::SecALEndSessionConfirm, this)
+        );
+    }
 }
 
 void SecuritySubsystem::registerSecureSessionSecSubAPI(
@@ -153,4 +161,59 @@ void SecuritySubsystem::AppSecIncomingRequest(
         std::cerr << "!!!!! appSecIncomingConfirmCB unregistered !!!\n";
     }
     appSecIncomingConfirmCB(result);
+}
+
+
+// Triggered by the APP
+void SecuritySubsystem::AppSecEndSessionRequest(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SessionId &sessionId)
+{
+    std::cerr << "SecuritySubsystem::AppSecEndSessionRequest\n";
+    if (!appSecEndSessionIndicationCB) {
+        std::cerr << "!!!!!!!!!1\n";
+    }
+    appSecEndSessionIndicationCB(appId, sessionId,
+        BaseTypes::EnumeratedSecLayer::APPLICATION);
+    // TODO: SEC_AL_END_SESSION
+    if (auto sptr = alAPI.lock()) {
+        sptr->SecALEndSessionRequest(appId, sessionId);
+    }
+}
+
+// Trigerred internally
+void SecuritySubsystem::forceEndSession(
+    const BaseTypes::AppId& appId,
+    const BaseTypes::SessionId& sessionId)
+{
+    std::cerr << "SecuritySubsystem::forceEndSession\n";
+    if (!appSecEndSessionIndicationCB) {
+        std::cerr << "!!!!!!!!!1\n";
+    }
+    appSecEndSessionIndicationCB(appId, sessionId,
+        BaseTypes::EnumeratedSecLayer::SECURITY_SUBSYSTEM);
+}
+
+void SecuritySubsystem::AppSecDeactivateRequest(const BaseTypes::AppId &appId, const BaseTypes::SecureSessionInstanceId &secureSessionId)
+{
+    std::cerr << "SecuritySubsystem::AppSecDeactivateRequest\n";
+}
+
+void SecuritySubsystem::SecALAccessControlConfirm()
+{
+    std::cerr << "SecuritySubsystem::SecALAccessControlConfirm\n";
+}
+
+void SecuritySubsystem::SecALAccessControlIndictation(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SessionId &sessionId,
+    const BaseTypes::Data &data)
+{
+    std::cerr << "SecuritySubsystem::SecALAccessControlIndictation\n";
+    // TODO: implement
+}
+
+void SecuritySubsystem::SecALEndSessionConfirm()
+{
+    std::cerr << "SecuritySubsystem::SecALEndSessionConfirm\n";
 }

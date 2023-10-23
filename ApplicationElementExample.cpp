@@ -56,6 +56,26 @@ void ApplicationElementExample::AppSecIncomingConfirm(SecuritySubsystemAppAPI::A
     }
 }
 
+void ApplicationElementExample::AppSecEndSessionIndication(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SessionId &secureSessionId,
+    BaseTypes::EnumeratedSecLayer originatingLayer)
+{
+    std::cerr << "ApplicationElementExample::AppSecEndSessionIndication\n";
+}
+
+void ApplicationElementExample::AppSecDeactivateConfirm()
+{
+    std::cerr << "ApplicationElementExample::AppSecDeactivateConfirm\n";
+}
+
+void ApplicationElementExample::AppSecDeactivateIndication(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SecureSessionInstanceId &secureSessionId)
+{
+    std::cerr << "ApplicationElementExample::AppSecDeactivateIndication\n";
+}
+
 void ApplicationElementExample::executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI &)> fn)
 {
     if (auto sptr = secSubsystemAppAPI.lock()) {
