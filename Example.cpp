@@ -81,5 +81,8 @@ int main() {
         secSubAPI.AppSecEndSessionRequest(appId, sessionId);
     });
 
+    std::cerr << "=====> Session Terminated ad session layer\n";
+    secureSession->sessionTerminated();
+
     return 1;
 }

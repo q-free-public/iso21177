@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <iostream>
 
 
 namespace BaseTypes {
@@ -27,3 +28,12 @@ namespace BaseTypes {
     typedef std::vector<uint8_t> SignedData;
     typedef std::vector<uint8_t> SignedDataVerificationParams;
 } // namespace BaseTypes
+
+template<class... Args1, class... Args2 >
+void call_function(std::function<void(Args1...)> fn, Args2... args) {
+    if (!fn) {
+        std::cerr << "function not specified\n";
+    } else {
+        fn(args...);
+    }
+}

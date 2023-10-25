@@ -8,9 +8,7 @@ void AdaptorLayer::AppALDataRequest(
     const BaseTypes::Data &data)
 {
     std::cerr << "AdaptorLayer::AppALDataRequest " << appId <<"\n";
-    if (appALDataConfirmCB) {
-        appALDataConfirmCB();
-    }
+    call_function(appALDataConfirmCB);
     BaseTypes::SignedData apduToSend(data);
     // Add Session non-repudiation (not supported in current standard)
     // TODO: add Data header (8.2)
@@ -40,10 +38,7 @@ void AdaptorLayer::ALSessDataIndication(
     // 1. TLS Handshake proxy PDU - unsupported
     // 2. Access Control PDU - TODO: implement
     // 3. APDU : Application data
-    if (!appALDataIndicationCB) {
-        std::cerr << "!!!!!! appALDataIndicationCB noet registered !!!\n";
-    }
-    appALDataIndicationCB(appId, sessionId, alpduReceived);
+    call_function(appALDataIndicationCB, appId, sessionId, alpduReceived);
 }
 
 void AdaptorLayer::ALSessEndSessionConfirm()
@@ -63,10 +58,7 @@ void AdaptorLayer::SecALEndSessionRequest(
     const BaseTypes::SessionId &sessionId)
 {
     std::cerr << "AdaptorLayer::SecALEndSessionRequest\n";
-    if (!secALEndSessionConfirmCB) {
-        std::cerr << "!!!!! secALEndSessionConfirmCB unregistered\n";
-    }
-    secALEndSessionConfirmCB();
+    call_function(secALEndSessionConfirmCB);
     if (auto sptr = secSessALAPI.lock()) {
         sptr->ALSessEndSessionRequest(appId, sessionId);
     }

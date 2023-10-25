@@ -33,8 +33,10 @@ void SecuritySubsystem::registerSecureSessionSecSubAPI(
             std::bind(&SecuritySubsystem::SecSessConfigureConfirm, this),
             std::bind(&SecuritySubsystem::SecSessStartIndication, this,
                     std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3
-            )
+                    std::placeholders::_3),
+            std::bind(&SecuritySubsystem::SecSessEndSessionIndication, this,
+                    std::placeholders::_1, std::placeholders::_2),
+            std::bind(&SecuritySubsystem::SecSessDeactivateConfirm, this)
         );
     }
 }
@@ -216,4 +218,21 @@ void SecuritySubsystem::SecALAccessControlIndictation(
 void SecuritySubsystem::SecALEndSessionConfirm()
 {
     std::cerr << "SecuritySubsystem::SecALEndSessionConfirm\n";
+}
+
+void SecuritySubsystem::SecSessEndSessionIndication(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SessionId &sessionId)
+{
+    std::cerr << "SecuritySubsystem::SecSessEndSessionIndication\n";
+    call_function(appSecEndSessionIndicationCB, 
+        appId, sessionId, BaseTypes::EnumeratedSecLayer::SECURE_SESSION_SERVICE);
+    if (auto sptr = alAPI.lock()) {
+        sptr->SecALEndSessionRequest(appId, sessionId);
+    }
+}
+
+void SecuritySubsystem::SecSessDeactivateConfirm()
+{
+    std::cerr << "SecuritySubsystem::SecSessDeactivateConfirm\n";
 }

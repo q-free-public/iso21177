@@ -6,21 +6,6 @@
 
 class SecureSessionSecSubAPI {
 public:
-    typedef std::function<void()>
-            SecSessConfigureConfirmCB;
-
-    typedef std::function<void(
-                const BaseTypes::AppId&,
-                const BaseTypes::SessionId&,
-                const BaseTypes::Certificate&
-        )>
-            SecSessionStartIndicationCB;
-
-    virtual void registerSecSubCallbacks(
-        SecSessConfigureConfirmCB,
-        SecSessionStartIndicationCB
-    );
-
     virtual void SecSessConfigureRequest(
         const BaseTypes::AppId& appId,
         BaseTypes::Role role,
@@ -42,7 +27,38 @@ public:
         const BaseTypes::IssuerConstraints& issuerConstraints
     ) = 0;
 
+    typedef std::function<void()>
+            SecSessConfigureConfirmCB;
+
+    typedef std::function<void(
+                const BaseTypes::AppId&,
+                const BaseTypes::SessionId&,
+                const BaseTypes::Certificate&
+        )
+    > SecSessionStartIndicationCB;
+
+    typedef std::function<void(
+        const BaseTypes::AppId& appid,
+        const BaseTypes::SessionId& sessionId
+    )> SecSessEndSessionIndicationCB;
+
+    virtual void SecSessDeactivateRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SecureSessionInstanceId& secSessInstanceId
+    ) = 0;
+
+    typedef std::function<void(
+    )> SecSessDeactivateConfirmCB;
+
+    virtual void registerSecSubCallbacks(
+        SecSessConfigureConfirmCB secSessConfigureConfirmCB,
+        SecSessionStartIndicationCB secSessionStartIndicationCB,
+        SecSessEndSessionIndicationCB secSessEndSessionIndicationCB,
+        SecSessDeactivateConfirmCB secSessDeactivateConfirmCB
+    );
 protected:
     SecSessConfigureConfirmCB secSessConfigureConfirmCB;
-    SecSessionStartIndicationCB secSessionStartIndicationCB; 
+    SecSessionStartIndicationCB secSessionStartIndicationCB;
+    SecSessEndSessionIndicationCB secSessEndSessionIndicationCB;
+    SecSessDeactivateConfirmCB secSessDeactivateConfirmCB;
 };

@@ -43,10 +43,17 @@ public:
         const BaseTypes::SessionId& sessionId
     );
 
+    virtual void SecSessDeactivateRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SecureSessionInstanceId& secSessInstanceId
+    );
+
     // This should be triggered by TLS handshake completion
     void afterHandshake();
     // This is what comes from a socket
     void receiveData(const std::vector<uint8_t>& data);
+    // This is called when a session is lost
+    void sessionTerminated();
 
 private:
 };

@@ -64,6 +64,13 @@ public:
     );
     virtual void SecALEndSessionConfirm();
 
+    virtual void SecSessEndSessionIndication(
+        const BaseTypes::AppId& appid,
+        const BaseTypes::SessionId& sessionId
+    );
+
+    virtual void SecSessDeactivateConfirm();
+
     virtual void forceEndSession(
         const BaseTypes::AppId& appId,
         const BaseTypes::SessionId& sessionId

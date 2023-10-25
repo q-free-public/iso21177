@@ -50,6 +50,13 @@ void SecureSession::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const
     aLSessEndSessionConfirmCB();
 }
 
+void SecureSession::SecSessDeactivateRequest(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SecureSessionInstanceId &secSessInstanceId)
+{
+    std::cerr << "SecureSession::SecSessDeactivateRequest\n";
+}
+
 void SecureSession::afterHandshake()
 {
     BaseTypes::AppId appId = 1;
@@ -70,4 +77,14 @@ void SecureSession::receiveData(const std::vector<uint8_t> &data)
     BaseTypes::AppId appId = 10;
     BaseTypes::SessionId sessionId = 11;
     aLSessDataIndicationCB(appId, sessionId, data);
+}
+
+void SecureSession::sessionTerminated()
+{
+    BaseTypes::AppId appId(16);
+    BaseTypes::SessionId sessionId(8);
+    if (!secSessEndSessionIndicationCB) {
+        std::cerr << "!!!!1 secSessEndSessionIndicationCB unregistered\n";
+    }
+    secSessEndSessionIndicationCB(appId, sessionId);
 }
