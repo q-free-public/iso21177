@@ -196,9 +196,25 @@ void SecuritySubsystem::forceEndSession(
         BaseTypes::EnumeratedSecLayer::SECURITY_SUBSYSTEM);
 }
 
-void SecuritySubsystem::AppSecDeactivateRequest(const BaseTypes::AppId &appId, const BaseTypes::SecureSessionInstanceId &secureSessionId)
+void SecuritySubsystem::endSession()
+{
+    BaseTypes::AppId appId(11);
+    BaseTypes::SecureSessionInstanceId secSessId(99);
+    call_function(appSecDeactivateIndicationCB, appId, secSessId);
+    if (auto sptr = secSessAPI.lock()) {
+        sptr->SecSessDeactivateRequest(appId, secSessId);
+    }
+}
+
+void SecuritySubsystem::AppSecDeactivateRequest(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SecureSessionInstanceId &secureSessionId)
 {
     std::cerr << "SecuritySubsystem::AppSecDeactivateRequest\n";
+    call_function(appSecDeactivateConfirmCB);
+    if (auto sptr = secSessAPI.lock()) {
+        sptr->SecSessDeactivateRequest(appId, secureSessionId);
+    }
 }
 
 void SecuritySubsystem::SecALAccessControlConfirm()
@@ -212,7 +228,16 @@ void SecuritySubsystem::SecALAccessControlIndictation(
     const BaseTypes::Data &data)
 {
     std::cerr << "SecuritySubsystem::SecALAccessControlIndictation\n";
-    // TODO: implement
+    // TODO: apply Access Control Policy to determine what action to take
+    bool pduIsValidAndRelevant = true;
+    if (data.size() > 2 && data.data()[1] == 0x07) {
+        pduIsValidAndRelevant = false;
+    }
+    if (pduIsValidAndRelevant) {
+        std::cerr << "PDU is valid and relevant - update SecuritySubsystem state\n";
+    } else {
+        std::cerr << "PDU is not valid or not relevant - will be ignored\n";
+    }
 }
 
 void SecuritySubsystem::SecALEndSessionConfirm()
@@ -235,4 +260,25 @@ void SecuritySubsystem::SecSessEndSessionIndication(
 void SecuritySubsystem::SecSessDeactivateConfirm()
 {
     std::cerr << "SecuritySubsystem::SecSessDeactivateConfirm\n";
+}
+
+void SecuritySubsystem::SecAuthStateRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId, const BaseTypes::DateAndTime &notBefore, const BaseTypes::Location &location)
+{
+    std::cerr << "SecuritySubsystem::SecAuthStateRequest\n";
+
+}
+
+void SecuritySubsystem::SecAuthStateConfirm(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId, const BaseTypes::CredentialBasedAuthState &credentialBasedAuthState, const BaseTypes::DateAndTime &receptionTime)
+{
+    std::cerr << "SecuritySubsystem::SecAuthStateConfirm\n";
+}
+
+void SecuritySubsystem::sendAccessControlPdu()
+{
+    BaseTypes::AppId appId(100);
+    BaseTypes::SessionId sessionId(11);
+    BaseTypes::Data data({0x05, 0x06});
+    if (auto sptr = alAPI.lock()) {
+        sptr->SecALAccessControlRequest(appId, sessionId, data);
+    }
 }

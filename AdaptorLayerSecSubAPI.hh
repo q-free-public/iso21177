@@ -11,7 +11,8 @@ public:
     
     virtual void SecALAccessControlRequest(
         const BaseTypes::AppId& appId,
-        const BaseTypes::SessionId& sessionId
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::Data& data
     ) = 0;
     typedef std::function<
         void()

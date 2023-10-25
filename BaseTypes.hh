@@ -22,11 +22,24 @@ namespace BaseTypes {
     typedef std::string SigningParameters;
     enum class EnumeratedSecLayer { SECURITY_SUBSYSTEM, SECURE_SESSION_SERVICE, APPLICATION};
     typedef int SecureSessionInstanceId;
+    typedef std::string DateAndTime;
+    typedef std::string Location;
     
     // 1609.2 Types
+    typedef uint64_t AID;
+    typedef std::vector<uint8_t> SSP;
+    typedef std::vector<uint8_t> HashedId8;
     typedef std::vector<uint8_t> Certificate;
     typedef std::vector<uint8_t> SignedData;
     typedef std::vector<uint8_t> SignedDataVerificationParams;
+
+
+    struct CredentialBasedAuthState {
+        AID aid;
+        SSP ssp;
+        HashedId8 certId;
+        DateAndTime receptionTime;
+    };
 } // namespace BaseTypes
 
 template<class... Args1, class... Args2 >

@@ -47,4 +47,6 @@ public:
 
     void executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI&)>);
     void executeWithALAPI(std::function<void(AdaptorLayerAppAPI&)>);
+
+    void EndSession();
 };

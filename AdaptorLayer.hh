@@ -29,7 +29,8 @@ public:
 
     virtual void SecALAccessControlRequest(
         const BaseTypes::AppId& appId,
-        const BaseTypes::SessionId& sessionId
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::Data& data
     );
 
     virtual void SecALEndSessionRequest(

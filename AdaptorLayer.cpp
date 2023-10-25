@@ -34,11 +34,34 @@ void AdaptorLayer::ALSessDataIndication(
     const BaseTypes::Data &alpduReceived)
 {
     std::cerr << "AdaptorLayer::ALSessDataIndication" << "\n";
+    enum class ALPDUDataType { ProxyPDU, AccessControlPDU, APDU};
     // TODO: check type of received data
-    // 1. TLS Handshake proxy PDU - unsupported
-    // 2. Access Control PDU - TODO: implement
-    // 3. APDU : Application data
-    call_function(appALDataIndicationCB, appId, sessionId, alpduReceived);
+    ALPDUDataType PduType = ALPDUDataType::APDU;
+    if (alpduReceived.size() > 0) {
+        if (alpduReceived.data()[0] == 0x00) {
+            PduType = ALPDUDataType::ProxyPDU;
+        }
+        if (alpduReceived.data()[0] == 0x01) {
+            PduType = ALPDUDataType::AccessControlPDU;
+        }
+        if (alpduReceived.data()[0] == 0x02) {
+            PduType = ALPDUDataType::APDU;
+        }
+    }
+
+    switch (PduType) {
+        // 1. TLS Handshake proxy PDU - unsupported
+        case ALPDUDataType::ProxyPDU:
+            std::cerr << "Unsupported PDU type - ProxyPDU\n";
+            break;
+        // 2. Access Control PDU - TODO: implement
+        case ALPDUDataType::AccessControlPDU:
+            call_function(secALAccessControlIndictationCB, appId, sessionId, alpduReceived);
+            break;
+        // 3. APDU : Application data
+        case ALPDUDataType::APDU:
+            call_function(appALDataIndicationCB, appId, sessionId, alpduReceived);
+    }
 }
 
 void AdaptorLayer::ALSessEndSessionConfirm()
@@ -48,9 +71,16 @@ void AdaptorLayer::ALSessEndSessionConfirm()
 
 void AdaptorLayer::SecALAccessControlRequest(
     const BaseTypes::AppId &appId,
-    const BaseTypes::SessionId &sessionId)
+    const BaseTypes::SessionId &sessionId,
+    const BaseTypes::Data& data)
 {
     std::cerr << "AdaptorLayer::SecALAccessControlRequest\n";
+    call_function(secALAccessControlConfirmCB);
+    // TODO: create ALPDU Iso21177AdaptorLayerPDUA
+    BaseTypes::Data alpdu(data);
+    if (auto sptr = secSessALAPI.lock()) {
+        sptr->ALSessDataRequest(appId, sessionId, alpdu);
+    }
 }
 
 void AdaptorLayer::SecALEndSessionRequest(

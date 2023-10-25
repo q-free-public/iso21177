@@ -24,7 +24,7 @@ int main() {
     BaseTypes::SessionId sessionId = 456;
     BaseTypes::CryptomaterialHandle cryptoHandle = "Very Sercure Cert";
     
-    auto fn = [&](SecuritySubsystemAppAPI& secAPI) {
+    appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secAPI) {
         std::cerr << "==> First, a failing example \n";
         secAPI.AppSecConfigureRequest(
             123,
@@ -43,8 +43,7 @@ int main() {
             false,
             13, BaseTypes::TransportMechanismType::RELIABLE,
             cryptoHandle);
-    };
-    appEx->executeWithSecAPI(fn);
+    });
     std::cerr << "=====> Secure session handshake finished by a client\n";
     secureSession->afterHandshake();
 
@@ -72,9 +71,17 @@ int main() {
             ieee1609Data);
     });
 
-    std::cerr << "=====> Secure session receive data\n";
+    std::cerr << "=====> Secure session receive data (ProxyPDU)\n";
+    secureSession->receiveData({0x00, 0x03, 0x07});
+
+    std::cerr << "=====> Secure session receive data (AccessControlPDU - valid)\n";
     secureSession->receiveData({0x01, 0x03, 0x07});
 
+    std::cerr << "=====> Secure session receive data (AccessControlPDU - not valid)\n";
+    secureSession->receiveData({0x01, 0x07, 0x07});
+
+    std::cerr << "=====> Secure session receive data (APDU)\n";
+    secureSession->receiveData({0x02, 0x03, 0x07});
     
     std::cerr << "=====> App triggering End session\n";
     appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secSubAPI){
@@ -83,6 +90,12 @@ int main() {
 
     std::cerr << "=====> Session Terminated ad session layer\n";
     secureSession->sessionTerminated();
+
+    std::cerr << "=====> Session Deactivated by App\n";
+    appEx->EndSession();
+
+    std::cerr << "=====> Session Deactivated by Security Subsystem\n";
+    secSubsystem->endSession();
 
     return 1;
 }

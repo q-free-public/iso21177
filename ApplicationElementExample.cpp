@@ -93,3 +93,12 @@ void ApplicationElementExample::executeWithALAPI(std::function<void(AdaptorLayer
         std::cerr << "!!!!! AL App API unregistered !!!!\n";
     }
 }
+
+void ApplicationElementExample::EndSession()
+{
+    BaseTypes::AppId appId(11);
+    BaseTypes::SecureSessionInstanceId secSessId(99);
+    if (auto sptr = secSubsystemAppAPI.lock()) {
+        sptr->AppSecDeactivateRequest(appId, secSessId);
+    }
+}

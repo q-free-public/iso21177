@@ -24,19 +24,13 @@ void SecureSession::SecSessConfigureRequest(
 {
     std::cerr << "SecureSession::SecSessConfigureRequest" << " APP ID " << appId << "\n";
     std::cerr << "SecureSession will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << cryptomaterialHandle << "\n";
-    if (secSessConfigureConfirmCB) {
-        secSessConfigureConfirmCB();
-    }
+    call_function(secSessConfigureConfirmCB);
 }
 
 void SecureSession::ALSessDataRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId, const BaseTypes::Data &apduToSend)
 {
     std::cerr << "SecureSession::ALSessDataRequest" << "\n";
-    if (aLSessDataConfirmCB) {
-        aLSessDataConfirmCB();
-    } else {
-        std::cerr << "!!!! aLSessDataConfirmCB unregistered !!!!!\n";
-    }
+    call_function(aLSessDataConfirmCB);
     //TODO: fragments and cryptographically protects
     // passes to the network for transmission
 }
@@ -44,10 +38,7 @@ void SecureSession::ALSessDataRequest(const BaseTypes::AppId &appId, const BaseT
 void SecureSession::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)
 {
     std::cerr << "SecureSession::ALSessEndSessionRequest" << "\n";
-    if (!aLSessEndSessionConfirmCB) {
-        std::cerr << "!!!!!!! aLSessEndSessionConfirmCB unregistered\n";
-    }
-    aLSessEndSessionConfirmCB();
+    call_function(aLSessEndSessionConfirmCB);
 }
 
 void SecureSession::SecSessDeactivateRequest(
@@ -55,6 +46,12 @@ void SecureSession::SecSessDeactivateRequest(
     const BaseTypes::SecureSessionInstanceId &secSessInstanceId)
 {
     std::cerr << "SecureSession::SecSessDeactivateRequest\n";
+    // No more new connections
+    call_function(secSessDeactivateConfirmCB);
+    // TODO: IF server -> stop accepting incorming connections
+    // TODO: IF client -> stop attempting new outgoing connections
+    
+    // TODO: delete all state relevant to new sessions
 }
 
 void SecureSession::afterHandshake()
@@ -62,29 +59,21 @@ void SecureSession::afterHandshake()
     BaseTypes::AppId appId = 1;
     BaseTypes::SessionId sessionId = 1;
     BaseTypes::Certificate cert = {0x01, 0x03, 0x05, 0x06};
-    if (secSessionStartIndicationCB) {
-        secSessionStartIndicationCB(appId, sessionId,
-                cert);
-    }
+    call_function(secSessionStartIndicationCB,
+            appId, sessionId, cert);
 }
 
 void SecureSession::receiveData(const std::vector<uint8_t> &data)
 {
     // Check if session timed out
-    if (!aLSessDataIndicationCB) {
-        std::cerr << "!!!!! aLSessDataIndicationCB not registered\n";
-    }
     BaseTypes::AppId appId = 10;
     BaseTypes::SessionId sessionId = 11;
-    aLSessDataIndicationCB(appId, sessionId, data);
+    call_function(aLSessDataIndicationCB, appId, sessionId, data);
 }
 
 void SecureSession::sessionTerminated()
 {
     BaseTypes::AppId appId(16);
     BaseTypes::SessionId sessionId(8);
-    if (!secSessEndSessionIndicationCB) {
-        std::cerr << "!!!!1 secSessEndSessionIndicationCB unregistered\n";
-    }
-    secSessEndSessionIndicationCB(appId, sessionId);
+    call_function(secSessEndSessionIndicationCB, appId, sessionId);
 }

@@ -5,8 +5,11 @@
 #include "SecuritySubsystemAppAPI.hh"
 #include "AdaptorLayerSecSubAPI.hh"
 #include "SecureSessionSecSubAPI.hh"
+#include "SecuritySusystemInternalInterface.hh"
 
-class SecuritySubsystem : public SecuritySubsystemAppAPI {
+class SecuritySubsystem 
+: public SecuritySubsystemAppAPI
+, public SecuritySubsystemInternalInterface {
 public:
     SecuritySubsystem();
     void registerAdaptorLayerSecSubAPI(std::weak_ptr<AdaptorLayerSecSubAPI> );
@@ -71,10 +74,28 @@ public:
 
     virtual void SecSessDeactivateConfirm();
 
+    virtual void SecAuthStateRequest(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::DateAndTime& notBefore,
+        const BaseTypes::Location& location
+    );
+
+    virtual void SecAuthStateConfirm(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::CredentialBasedAuthState& credentialBasedAuthState,
+        const BaseTypes::DateAndTime& receptionTime
+    );
+
+    virtual void sendAccessControlPdu();
+
     virtual void forceEndSession(
         const BaseTypes::AppId& appId,
         const BaseTypes::SessionId& sessionId
     );
+
+    virtual void endSession();
     
 private:
     std::weak_ptr<AdaptorLayerSecSubAPI> alAPI;
