@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <map>
 
 #include "SecureSessionSecSubAPI.hh"
 #include "SecureSessionALAPI.hh"
@@ -50,10 +51,17 @@ public:
 
     // This should be triggered by TLS handshake completion
     void afterHandshake();
+    void checkForData();
     // This is what comes from a socket
     void receiveData(const std::vector<uint8_t>& data);
     // This is called when a session is lost
     void sessionTerminated();
 
 private:
+    typedef std::pair<BaseTypes::AppId, BaseTypes::SessionId> key_t;
+    struct sessionData {
+        BaseTypes::Role role;
+        BaseTypes::Socket socket;
+    };
+    std::map<key_t, sessionData> data_;
 };

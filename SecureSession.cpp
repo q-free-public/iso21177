@@ -1,6 +1,10 @@
 #include "SecureSession.hh"
 
+#include <array>
 #include <iostream>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
 
 SecureSession::SecureSession()
 {
@@ -24,15 +28,33 @@ void SecureSession::SecSessConfigureRequest(
 {
     std::cerr << "SecureSession::SecSessConfigureRequest" << " APP ID " << appId << "\n";
     std::cerr << "SecureSession will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << cryptomaterialHandle << "\n";
+    sessionData data;
+    data.socket = socket;
+    data.role = role;
+    key_t key(appId, sessionId);
+    data_[key] = data;
     call_function(secSessConfigureConfirmCB);
 }
 
-void SecureSession::ALSessDataRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId, const BaseTypes::Data &apduToSend)
+void SecureSession::ALSessDataRequest(
+    const BaseTypes::AppId &appId,
+    const BaseTypes::SessionId &sessionId,
+    const BaseTypes::Data &apduToSend)
 {
     std::cerr << "SecureSession::ALSessDataRequest" << "\n";
     call_function(aLSessDataConfirmCB);
     //TODO: fragments and cryptographically protects
     // passes to the network for transmission
+    key_t key(appId, sessionId);
+    auto it = data_.find(key);
+    if (it == data_.end()) {
+        std::cerr << "No session found\n";
+        return;
+    }
+    BaseTypes::Socket sock = it->second.socket;
+    std::cerr << "====SecureSession::ALSessDataRequest sock: " << sock << "\n";
+    int sent = send(sock, apduToSend.data(), apduToSend.size(), 0);
+    std::cerr << "SecureSession::ALSessDataRequest : sent " << sent << " data size: " << apduToSend.size() << "\n";
 }
 
 void SecureSession::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)
@@ -61,6 +83,38 @@ void SecureSession::afterHandshake()
     BaseTypes::Certificate cert = {0x01, 0x03, 0x05, 0x06};
     call_function(secSessionStartIndicationCB,
             appId, sessionId, cert);
+}
+
+void SecureSession::checkForData()
+{
+    std::array<uint8_t, 1024> buffer;
+    int count;
+    for (auto it : data_) {
+        std::cerr << "trying " << it.first.first << " " << it.first.second << " | sock: " << it.second.socket << "\n";
+        BaseTypes::Socket sock = it.second.socket;
+        struct sockaddr_in addr;
+        unsigned int len = sizeof(addr);
+        if (it.second.role == BaseTypes::Role::SERVER) {
+            int client = accept(sock, (struct sockaddr*)&addr, &len);
+            if (client < 0) {
+                perror("accept");
+                continue;
+            }
+            sock = client;
+        }
+        int result = ioctl(sock, FIONREAD, &count);
+        std::cerr << "data available " << count << " result: " << result << "\n";
+        if (result < 0) {
+            perror("ioctl");
+        }
+        if (count > 0) {
+            int received = recv(sock, buffer.data(), buffer.size(), 0);
+            std::cerr << "received " << received << "\n";
+            BaseTypes::Data data;
+            std::copy(buffer.begin(), buffer.begin() + received, std::back_inserter(data));
+            call_function(aLSessDataIndicationCB, it.first.first, it.first.second, data);
+        }
+    }
 }
 
 void SecureSession::receiveData(const std::vector<uint8_t> &data)

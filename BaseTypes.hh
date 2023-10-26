@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <string>
 #include <iostream>
+#include <vector>
+#include <functional>
 
 
 namespace BaseTypes {
@@ -50,3 +52,6 @@ void call_function(std::function<void(Args1...)> fn, Args2... args) {
         fn(args...);
     }
 }
+
+BaseTypes::Socket createServerSocket(int port);
+BaseTypes::Socket createClientSocket(int port);

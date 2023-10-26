@@ -1,5 +1,9 @@
 #include <iostream>
 
+#include <cstring>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 #include "ApplicationElementExample.hh"
 #include "SecuritySubsystemAppAPI.hh"
 #include "SecureSession.hh"
@@ -21,27 +25,45 @@ int main() {
     std::cerr <<"Init DONE\n";
 
     BaseTypes::AppId appId = 123;
-    BaseTypes::SessionId sessionId = 456;
+    int port = 1337;
+    BaseTypes::Socket serverSocket = createServerSocket(port);
+    BaseTypes::Socket clientSocket = createClientSocket(port);
+    if (serverSocket < 0 || clientSocket < 0) {
+        std::cerr << "One of the sockets is invalid\n";
+        return -1;
+    }
+
+    BaseTypes::SessionId sessionIdServer = 456;
+    BaseTypes::SessionId sessionIdClient = 888;
     BaseTypes::CryptomaterialHandle cryptoHandle = "Very Sercure Cert";
-    
+
     appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secAPI) {
         std::cerr << "==> First, a failing example \n";
         secAPI.AppSecConfigureRequest(
-            123,
+            appId,
             BaseTypes::Role::SERVER,
-            12,
+            serverSocket,
             BaseTypes::SessionType::INTERNAL,
-            true,
-            13, BaseTypes::TransportMechanismType::UNRELIABLE,
+            true, 
+            sessionIdServer, BaseTypes::TransportMechanismType::UNRELIABLE,
             "Very Secure Certificate");
-        std::cerr << "==> Now a working example \n";
+        std::cerr << "==> Now a working example  - server\n";
         secAPI.AppSecConfigureRequest(
             appId,
             BaseTypes::Role::SERVER,
-            sessionId,
+            serverSocket,
             BaseTypes::SessionType::EXTERNAL,
             false,
-            13, BaseTypes::TransportMechanismType::RELIABLE,
+            sessionIdServer, BaseTypes::TransportMechanismType::RELIABLE,
+            cryptoHandle);
+        std::cerr << "==> Now a working example  - client\n";
+        secAPI.AppSecConfigureRequest(
+            appId,
+            BaseTypes::Role::CLIENT,
+            clientSocket,
+            BaseTypes::SessionType::EXTERNAL,
+            false,
+            sessionIdClient, BaseTypes::TransportMechanismType::RELIABLE,
             cryptoHandle);
     });
     std::cerr << "=====> Secure session handshake finished by a client\n";
@@ -53,7 +75,7 @@ int main() {
     appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secAPI){
         secAPI.AppSecDataRequest(
             appId,
-            sessionId,
+            sessionIdServer,
             cryptoHandle,
             {0x05, 0x06, 0x07, 0x08},
             "signing params"
@@ -62,14 +84,17 @@ int main() {
 
     // This is either a secured data, or unsecure data
     // but IEEE1609.2Data in either case
-    std::cerr << "=====> App sending data\n";
+    std::cerr << "=====> Client sending data\n";
     BaseTypes::Data ieee1609Data = {0x05, 0x06};
     appEx->executeWithALAPI([&](AdaptorLayerAppAPI& alAppAPI){
         alAppAPI.AppALDataRequest(
             appId,
-            sessionId,
+            sessionIdClient,
             ieee1609Data);
     });
+
+    std::cerr << "=====> Checking session for data\n";
+    secureSession->checkForData();
 
     std::cerr << "=====> Secure session receive data (ProxyPDU)\n";
     secureSession->receiveData({0x00, 0x03, 0x07});
@@ -85,7 +110,7 @@ int main() {
     
     std::cerr << "=====> App triggering End session\n";
     appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secSubAPI){
-        secSubAPI.AppSecEndSessionRequest(appId, sessionId);
+        secSubAPI.AppSecEndSessionRequest(appId, sessionIdServer);
     });
 
     std::cerr << "=====> Session Terminated ad session layer\n";

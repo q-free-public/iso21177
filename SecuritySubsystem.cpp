@@ -88,9 +88,7 @@ void SecuritySubsystem::AppSecConfigureRequest(
     }
 
     std::cerr << "SecureSessionSecSubAPI::SecSessConfigureRequest" << " APP ID " << appId << "\n";
-    if (this->appSecConfigureConfirmCB) {
-        this->appSecConfigureConfirmCB(result);
-    }
+    call_function(appSecConfigureConfirmCB, result);
     if (sessionType == BaseTypes::SessionType::EXTERNAL) {
         // Cryptographic session is required
         std::cerr << "Will configure external session \n";
@@ -126,10 +124,9 @@ void SecuritySubsystem::AppSecDataRequest(
 {
     std::cerr << "SecuritySubsystem::AppSecDataRequest " << appId << "\n";
     // TODO: Call SecEnt to sign the data
-    SecuritySubsystemAppAPI::AppSecDataConfirmResult result = SecuritySubsystemAppAPI::AppSecDataConfirmResult::SUCCESS;
-    if (appSecDataConfirmCB) {
-        appSecDataConfirmCB(result, data);
-    }
+    SecuritySubsystemAppAPI::AppSecDataConfirmResult result 
+        = SecuritySubsystemAppAPI::AppSecDataConfirmResult::SUCCESS;
+    call_function(appSecDataConfirmCB, result, data);
 }
 
 void SecuritySubsystem::AppSecIncomingRequest(
@@ -159,10 +156,7 @@ void SecuritySubsystem::AppSecIncomingRequest(
     if (result == Result::SUCCESS) {
         // TODO: apply the access control policy
     }
-    if (!appSecIncomingConfirmCB) {
-        std::cerr << "!!!!! appSecIncomingConfirmCB unregistered !!!\n";
-    }
-    appSecIncomingConfirmCB(result);
+   call_function(appSecIncomingConfirmCB, result);
 }
 
 
@@ -172,12 +166,8 @@ void SecuritySubsystem::AppSecEndSessionRequest(
     const BaseTypes::SessionId &sessionId)
 {
     std::cerr << "SecuritySubsystem::AppSecEndSessionRequest\n";
-    if (!appSecEndSessionIndicationCB) {
-        std::cerr << "!!!!!!!!!1\n";
-    }
-    appSecEndSessionIndicationCB(appId, sessionId,
-        BaseTypes::EnumeratedSecLayer::APPLICATION);
-    // TODO: SEC_AL_END_SESSION
+    call_function(appSecEndSessionIndicationCB, 
+            appId, sessionId, BaseTypes::EnumeratedSecLayer::APPLICATION);
     if (auto sptr = alAPI.lock()) {
         sptr->SecALEndSessionRequest(appId, sessionId);
     }
@@ -189,11 +179,8 @@ void SecuritySubsystem::forceEndSession(
     const BaseTypes::SessionId& sessionId)
 {
     std::cerr << "SecuritySubsystem::forceEndSession\n";
-    if (!appSecEndSessionIndicationCB) {
-        std::cerr << "!!!!!!!!!1\n";
-    }
-    appSecEndSessionIndicationCB(appId, sessionId,
-        BaseTypes::EnumeratedSecLayer::SECURITY_SUBSYSTEM);
+    call_function(appSecEndSessionIndicationCB,
+            appId, sessionId, BaseTypes::EnumeratedSecLayer::SECURITY_SUBSYSTEM);
 }
 
 void SecuritySubsystem::endSession()
