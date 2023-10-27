@@ -55,3 +55,6 @@ void call_function(std::function<void(Args1...)> fn, Args2... args) {
 
 BaseTypes::Socket createServerSocket(int port);
 BaseTypes::Socket createClientSocket(int port);
+
+
+void testAccept(BaseTypes::Socket sock);

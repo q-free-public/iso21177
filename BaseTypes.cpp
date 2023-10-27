@@ -70,3 +70,15 @@ BaseTypes::Socket createClientSocket(int port)
 
     return BaseTypes::Socket(s);
 }
+
+void testAccept(BaseTypes::Socket sock)
+{
+    struct sockaddr_in addr;
+    unsigned int len = sizeof(addr);
+    int client = accept(sock, (struct sockaddr*)&addr, &len);
+    if (client < 0) {
+        perror("TEST accept");
+    } else {
+        std::cerr << "TEST accept worked " << client << "\n";
+    }
+}

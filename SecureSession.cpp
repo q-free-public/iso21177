@@ -33,6 +33,9 @@ void SecureSession::SecSessConfigureRequest(
     data.role = role;
     key_t key(appId, sessionId);
     data_[key] = data;
+    if (role == BaseTypes::Role::CLIENT) {
+        attemptHandshake(appId, sessionId);
+    }
     call_function(secSessConfigureConfirmCB);
 }
 
@@ -130,4 +133,39 @@ void SecureSession::sessionTerminated()
     BaseTypes::AppId appId(16);
     BaseTypes::SessionId sessionId(8);
     call_function(secSessEndSessionIndicationCB, appId, sessionId);
+}
+
+void SecureSession::checkForSessions()
+{
+    std::array<uint8_t, 1024> buffer;
+    int count;
+    for (auto it : data_) {
+        if (it.second.role != BaseTypes::Role::SERVER) {
+            continue;
+        }
+        std::cerr << "trying " << it.first.first << " " << it.first.second << " | sock: " << it.second.socket << "\n";
+        if (it.second.clientSockets.size() > 0) {
+            std::cerr << "checkForSessions one client supported now, ignoring request\n";
+            continue;
+        }
+        BaseTypes::Socket sock = it.second.socket;
+        struct sockaddr_in addr;
+        unsigned int len = sizeof(addr);
+        int client = accept(sock, (struct sockaddr*)&addr, &len);
+        if (client < 0) {
+            perror("accept");
+            continue;
+        }
+        it.second.clientSockets.push_back(client);
+        BaseTypes::Certificate cert({0xDE, 0xAD});
+        call_function(secSessionStartIndicationCB, it.first.first, it.first.second, cert);
+    }
+}
+
+void SecureSession::attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId)
+{
+    //TODO: this is the fake implementation
+    std::cerr << "SecureSession::attemptHandshake\n";
+    BaseTypes::Data data({0x99, 0x98, 0x97, 0x96});
+    this->ALSessDataRequest(appId, sessId, data);
 }

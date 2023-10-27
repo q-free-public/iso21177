@@ -56,12 +56,16 @@ public:
     void receiveData(const std::vector<uint8_t>& data);
     // This is called when a session is lost
     void sessionTerminated();
+    void checkForSessions();
 
 private:
+    void attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId);
     typedef std::pair<BaseTypes::AppId, BaseTypes::SessionId> key_t;
     struct sessionData {
         BaseTypes::Role role;
         BaseTypes::Socket socket;
+        // non-empty only in server role
+        std::vector<BaseTypes::Socket> clientSockets;
     };
     std::map<key_t, sessionData> data_;
 };
