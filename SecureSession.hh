@@ -59,13 +59,15 @@ public:
     void checkForSessions();
 
 private:
+    enum class SocketState { CREATED, BEFORE_HANDSHAKE, AFTER_HANDSHAKE, SERVER_SOCKET};
     void attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId);
     typedef std::pair<BaseTypes::AppId, BaseTypes::SessionId> key_t;
+    typedef std::pair<BaseTypes::Socket, SocketState> SocketWithState;
     struct sessionData {
         BaseTypes::Role role;
-        BaseTypes::Socket socket;
+        SocketWithState socket;
         // non-empty only in server role
-        std::vector<BaseTypes::Socket> clientSockets;
+        std::vector<SocketWithState> clientSockets;
     };
     std::map<key_t, sessionData> data_;
 };

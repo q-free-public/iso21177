@@ -66,9 +66,6 @@ void AppFullInstance::checkIncomingSessions()
         std::cerr << "AppFullInstance not initialized\n";
         return;
     }
-    if (this->data_->role != BaseTypes::Role::SERVER) {
-        std::cerr << "Unable to checkIncomingSessions when not in SERVER mode\n";
-    }
     secureSession->checkForSessions();
 }
 
