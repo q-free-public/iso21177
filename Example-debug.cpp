@@ -94,7 +94,7 @@ int main() {
     });
 
     std::cerr << "=====> Checking session for data\n";
-    secureSession->checkForData();
+    secureSession->waitForNetworkInput();
 
     std::cerr << "=====> Secure session receive data (ProxyPDU)\n";
     secureSession->receiveData({0x00, 0x03, 0x07});

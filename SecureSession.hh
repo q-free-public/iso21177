@@ -51,7 +51,6 @@ public:
 
     // This should be triggered by TLS handshake completion
     void afterHandshake();
-    void checkForData();
     // This is what comes from a socket
     void receiveData(const std::vector<uint8_t>& data);
     // This is called when a session is lost
@@ -59,7 +58,7 @@ public:
     void waitForNetworkInput();
 
 private:
-    enum class SocketState { CREATED, BEFORE_HANDSHAKE, AFTER_HANDSHAKE, SERVER_SOCKET};
+    enum class SocketState { CREATED, BEFORE_HANDSHAKE, AFTER_HANDSHAKE, OTHER_SIDE_CLOSED, SERVER_SOCKET};
     typedef std::pair<BaseTypes::AppId, BaseTypes::SessionId> key_t;
     typedef std::pair<BaseTypes::Socket, SocketState> SocketWithState;
     struct sessionData {

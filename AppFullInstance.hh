@@ -18,6 +18,8 @@ public:
 
     void waitForNetworkInput();
     void sendData(BaseTypes::Data& data);
+    void forceEndSession();
+    void closeSocket();
 private:
     std::shared_ptr<SecureSession> secureSession;
     std::shared_ptr<SecuritySubsystem> secSubsystem;

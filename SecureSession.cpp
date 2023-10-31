@@ -2,9 +2,11 @@
 
 #include <array>
 #include <iostream>
+
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 SecureSession::SecureSession()
 {
@@ -85,6 +87,27 @@ void SecureSession::ALSessDataRequest(
 void SecureSession::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)
 {
     std::cerr << "SecureSession::ALSessEndSessionRequest" << "\n";
+    if (data_.size() != 1) {
+        std::cerr << "No sessions registered, exiting\n";
+    }
+    auto it = data_.begin();
+    //TODO: End session if supported in protocol
+    switch (it->second.role) {
+    case BaseTypes::Role::CLIENT: {
+        // in client case we do nothing now
+        break;
+    }
+    case BaseTypes::Role::SERVER: {
+        // in server case we close client socket (if open)
+        if (it->second.clientSockets.size() == 1) {
+            auto ptr = it->second.clientSockets.begin();
+            std::cerr << "closing client socket\n";
+            close(ptr->first);
+            it->second.clientSockets.erase(ptr);
+        }
+        break;
+    }
+    }
     call_function(aLSessEndSessionConfirmCB);
 }
 
@@ -108,35 +131,6 @@ void SecureSession::afterHandshake()
     BaseTypes::Certificate cert = {0x01, 0x03, 0x05, 0x06};
     call_function(secSessionStartIndicationCB,
             appId, sessionId, cert);
-}
-
-void SecureSession::checkForData()
-{
-    std::array<uint8_t, 1024> buffer;
-    int count;
-    for (auto it : data_) {
-        std::cerr << "trying " << it.first.first << " " << it.first.second << " | sock: " << it.second.socket.first << "\n";
-        SocketState state = it.second.socket.second;
-        if (state != SocketState::AFTER_HANDSHAKE) {
-            std::cerr << "socket is in state: " << (int)(state) << " not valid for reading data, skipping...\n";
-            continue;
-        }
-        BaseTypes::Socket sock = it.second.socket.first;
-        struct sockaddr_in addr;
-        unsigned int len = sizeof(addr);
-        int result = ioctl(sock, FIONREAD, &count);
-        std::cerr << "data available " << count << " result: " << result << "\n";
-        if (result < 0) {
-            perror("ioctl");
-        }
-        if (count > 0) {
-            int received = recv(sock, buffer.data(), buffer.size(), 0);
-            std::cerr << "received " << received << "\n";
-            BaseTypes::Data data;
-            std::copy(buffer.begin(), buffer.begin() + received, std::back_inserter(data));
-            call_function(aLSessDataIndicationCB, it.first.first, it.first.second, data);
-        }
-    }
 }
 
 void SecureSession::receiveData(const std::vector<uint8_t> &data)
@@ -173,7 +167,14 @@ void SecureSession::waitForNetworkInput()
             // Connected to server, wait for data
             BaseTypes::Data data;
             waitForData(it->second.socket, data);
-            call_function(aLSessDataIndicationCB, it->first.first, it->first.second, data);
+            if (data.size() > 0) {
+                call_function(aLSessDataIndicationCB, it->first.first, it->first.second, data);
+            }
+            if (data.size() == 0) {
+                std::cerr << "Socket is closed on the other side\n";
+
+                call_function(secSessEndSessionIndicationCB, it->first.first, it->first.second);
+            };
         break;
     }
     case BaseTypes::Role::SERVER: {
@@ -193,8 +194,20 @@ void SecureSession::waitForNetworkInput()
         } else if (it->second.clientSockets.size() == 1) {
             // Client is connected, wait for data
             BaseTypes::Data data;
-            waitForData(*(it->second.clientSockets.begin()), data);
-            call_function(aLSessDataIndicationCB, it->first.first, it->first.second, data);
+            auto sockWithStatePtr = it->second.clientSockets.begin();
+            waitForData(*sockWithStatePtr, data);
+            if (data.size() > 0) {
+                call_function(aLSessDataIndicationCB, it->first.first, it->first.second, data);
+            }
+            if (data.size() == 0) {
+                std::cerr << "Socket is closed on the other side\n";
+                sockWithStatePtr->second = SocketState::OTHER_SIDE_CLOSED;
+                call_function(secSessEndSessionIndicationCB, it->first.first, it->first.second);
+                // Accepted socket is opened here, we need to close it here as well
+                std::cerr << "closing client socket\n";
+                close(sockWithStatePtr->first);
+                it->second.clientSockets.erase(sockWithStatePtr);
+            };
         } else {
             std::cerr << "More than one client connected, this should not happen\n";
         }

@@ -19,10 +19,7 @@ AppFullInstance::AppFullInstance()
 
 AppFullInstance::~AppFullInstance()
 {
-    if (this->data_) {
-        std::cerr << "Closing socket\n";
-        close(this->data_->sock);
-    }
+    this->closeSocket();
 }
 
 void AppFullInstance::configureApplication(
@@ -83,6 +80,32 @@ void AppFullInstance::sendData(BaseTypes::Data &data)
             this->data_->sessionId,
             data);
     });
+}
+
+void AppFullInstance::forceEndSession()
+{
+    if (!this->data_) {
+        std::cerr << "AppFullInstance not initialized\n";
+        return;
+    }
+    // Sending without signing
+    // TODO: it may be necessary to encapsulate data in IEEE1609.2Data
+    appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secSubAPI){
+        secSubAPI.AppSecEndSessionRequest(
+            this->data_->appId,
+            this->data_->sessionId);
+    });
+}
+
+void AppFullInstance::closeSocket()
+{
+    if (this->data_) {
+        if (this->data_->sock >= 0) {
+            std::cerr << "Closing socket\n";
+            close(this->data_->sock);
+            this->data_->sock = -1;
+        }
+    }
 }
 
 AppFullInstance::data_t::data_t(BaseTypes::Role role, BaseTypes::Socket sock, BaseTypes::AppId appId, BaseTypes::SessionId sessionId, BaseTypes::CryptomaterialHandle cryptoHandle)
