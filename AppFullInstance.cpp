@@ -60,13 +60,29 @@ void AppFullInstance::configureApplication(
             this->data_->cryptoHandle);
 }
 
-void AppFullInstance::checkIncomingSessions()
+void AppFullInstance::waitForNetworkInput()
 {
     if (!this->data_) {
         std::cerr << "AppFullInstance not initialized\n";
         return;
     }
-    secureSession->checkForSessions();
+    secureSession->waitForNetworkInput();
+}
+
+void AppFullInstance::sendData(BaseTypes::Data &data)
+{
+    if (!this->data_) {
+        std::cerr << "AppFullInstance not initialized\n";
+        return;
+    }
+    // Sending without signing
+    // TODO: it may be necessary to encapsulate data in IEEE1609.2Data
+    appEx->executeWithALAPI([&](AdaptorLayerAppAPI& alAppAPI){
+        alAppAPI.AppALDataRequest(
+            this->data_->appId,
+            this->data_->sessionId,
+            data);
+    });
 }
 
 AppFullInstance::data_t::data_t(BaseTypes::Role role, BaseTypes::Socket sock, BaseTypes::AppId appId, BaseTypes::SessionId sessionId, BaseTypes::CryptomaterialHandle cryptoHandle)

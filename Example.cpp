@@ -1,8 +1,7 @@
 #include <iostream>
-
-#include <cstring>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include <thread>
+#include <condition_variable>
+#include <mutex>
 
 #include "ApplicationElementExample.hh"
 #include "SecuritySubsystemAppAPI.hh"
@@ -12,48 +11,60 @@
 
 #include "AppFullInstance.hh"
 
-void createApplication(int i, BaseTypes::Role role) {
-    int port = 1337;
-    BaseTypes::AppId appId = 999;
-    BaseTypes::SessionId sessionId = 567 + i;
-    BaseTypes::CryptomaterialHandle cryptoHandle = "Very Sercure Cert";
+// Synchronisation to inform client that the server is ready;
+std::condition_variable cond_var;
+std::mutex m;
+bool serverReady = false;
 
-    std::shared_ptr<SecureSession> secureSession(new SecureSession());
-    std::shared_ptr<SecuritySubsystem> secSubsystem(new SecuritySubsystem());
-    std::shared_ptr<AdaptorLayer> adaptorLayer(new AdaptorLayer);
-    std::shared_ptr<ApplicationElementExample> appEx(new ApplicationElementExample());
+auto serverThreadFn = [](){
+    AppFullInstance appServ;
 
-    appEx->registerSecuritySubsystemAPI(secSubsystem);
-    appEx->registerAdaptorLayerAPI(adaptorLayer);
-    secSubsystem->registerSecureSessionSecSubAPI(secureSession);
-    secSubsystem->registerAdaptorLayerSecSubAPI(adaptorLayer);
-    adaptorLayer->registerSecSessAPI(secureSession);
-
-    std::cerr <<"Init DONE\n";
-    BaseTypes::Socket sock;
-    switch (role) {
-        case BaseTypes::Role::SERVER: {
-            sock = createServerSocket(port);
-        }
-        case BaseTypes::Role::CLIENT: {
-            sock = createClientSocket(port);
-        }
+    appServ.configureApplication(123, BaseTypes::Role::SERVER);
+    std::cerr << "====> Server now configured\n";
+    {
+        std::lock_guard<std::mutex> l{m};
+        serverReady = true;
     }
+    cond_var.notify_all();
+    std::cerr << "====> Server will check for incoming sessions\n";
+    appServ.waitForNetworkInput();
+    // At this stage client and server are connected
+    // Now client sends data
+    std::cerr << "====> Server wil receive data\n";
+    appServ.waitForNetworkInput();
+    std::cerr << "====> Server will send out data\n";
+    BaseTypes::Data serverMessage = {0x02, 0x04, 0x06};
+    appServ.sendData(serverMessage);
+};
 
-    appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secAPI) {
-        std::cerr << "==> Now a working example  - server\n";
-        secAPI.AppSecConfigureRequest(
-            appId,
-            role,
-            sock,
-            BaseTypes::SessionType::EXTERNAL,
-            false,
-            sessionId, BaseTypes::TransportMechanismType::RELIABLE,
-            cryptoHandle);
-    });
+auto clientThreadFn = [](){
+    AppFullInstance appClient;
+
+    std::unique_lock<std::mutex> lock{m};
+    cond_var.wait(lock, []() { return serverReady; });
+
+    appClient.configureApplication(456, BaseTypes::Role::CLIENT);
+    std::cerr << "====> Client now configured\n";
+    // Now client sends data
+    std::cerr << "====> Client will send out data\n";
+    BaseTypes::Data clientMessage = {0x01, 0x03, 0x07, 0x08};
+    appClient.sendData(clientMessage);
+    std::cerr << "====> Client wil receive data\n";
+    appClient.waitForNetworkInput();
+};
+
+void runWithThreads() {
+    std::thread serverThread(serverThreadFn);
+    std::thread clientThread(clientThreadFn);
+
+    serverThread.join();
+    clientThread.join();
 }
 
 int main() {
+    runWithThreads();
+    std::cerr << "======> Now without threads\n";
+
     AppFullInstance appServ;
     AppFullInstance appClient;
 
@@ -62,7 +73,17 @@ int main() {
     appClient.configureApplication(456, BaseTypes::Role::CLIENT);
     std::cerr << "====> Client now configured\n";
     std::cerr << "====> Server will check for incoming sessions\n";
-    appServ.checkIncomingSessions();
-    std::cerr << "====> Client will check for incoming sessions\n";
-    appClient.checkIncomingSessions();
+    appServ.waitForNetworkInput();
+    // At this stage client and server are connected
+    // Now client sends data
+    std::cerr << "====> Client will send out data\n";
+    BaseTypes::Data clientMessage = {0x01, 0x03, 0x07, 0x08};
+    appClient.sendData(clientMessage);
+    std::cerr << "====> Server wil receive data\n";
+    appServ.waitForNetworkInput();
+    std::cerr << "====> Server will send out data\n";
+    BaseTypes::Data serverMessage = {0x02, 0x04, 0x06};
+    appServ.sendData(serverMessage);
+    std::cerr << "====> Client wil receive data\n";
+    appClient.waitForNetworkInput();
 }

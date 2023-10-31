@@ -28,18 +28,25 @@ void SecureSession::SecSessConfigureRequest(
 {
     std::cerr << "SecureSession::SecSessConfigureRequest" << " APP ID " << appId << "\n";
     std::cerr << "SecureSession will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << cryptomaterialHandle << "\n";
-    sessionData data;
-    data.socket = SocketWithState(socket, SocketState::CREATED);
-    data.role = role;
-    key_t key(appId, sessionId);
-    if (role == BaseTypes::Role::CLIENT) {
-        attemptHandshake(appId, sessionId);
-        data.socket.second = SocketState::BEFORE_HANDSHAKE;
+    if (data_.size() >= 1) {
+        // TODO: For now, only a single session is allowed
+        std::cerr << "Reached max allowed sessions: " << data_.size() << "\n";
+    } else {
+        sessionData data;
+        data.socket = SocketWithState(socket, SocketState::CREATED);
+        data.role = role;
+        key_t key(appId, sessionId);
+        if (role == BaseTypes::Role::CLIENT) {
+            attemptHandshake(appId, sessionId);
+            data.socket.second = SocketState::BEFORE_HANDSHAKE;
+            // TODO: for now we assume that client handshake always works
+            data.socket.second = SocketState::AFTER_HANDSHAKE;
+        }
+        if (role == BaseTypes::Role::SERVER) {
+            data.socket.second = SocketState::SERVER_SOCKET;
+        }
+        data_[key] = data;
     }
-    if (role == BaseTypes::Role::SERVER) {
-        data.socket.second = SocketState::SERVER_SOCKET;
-    }
-    data_[key] = data;
     call_function(secSessConfigureConfirmCB);
 }
 
@@ -59,6 +66,13 @@ void SecureSession::ALSessDataRequest(
         return;
     }
     SocketWithState sockWithState = it->second.socket;
+    if (it->second.role == BaseTypes::Role::SERVER) {
+        if (it->second.clientSockets.size() != 1) {
+            std::cerr << "Wrong number of clients connected to server " << it->second.clientSockets.size() << "\n";
+            return;
+        }
+        sockWithState = *(it->second.clientSockets.begin());
+    }
     std::cerr << "====SecureSession::ALSessDataRequest sock: " << sockWithState.first << "\n";
     if (sockWithState.second != SocketState::AFTER_HANDSHAKE) {
         std::cerr << "!!!!!! invalid socket state : " << (int)(sockWithState.second) << "\n";
@@ -140,42 +154,52 @@ void SecureSession::sessionTerminated()
     call_function(secSessEndSessionIndicationCB, appId, sessionId);
 }
 
-void SecureSession::checkForSessions()
+void SecureSession::waitForNetworkInput()
 {
-    std::array<uint8_t, 1024> buffer;
-    int count;
+    // Currently there is just a simple implementation which waits for a single socket.
+    // in case of client this is a socket with connection to the server
+    // in case of server this is the server socket if no clients are connected
+    // in case of server this is the client socket if the client is connected
+
+    if (data_.size() != 1) {
+        std::cerr << "No sessions registered, exiting\n";
+    }
+    auto it = data_.begin();
     // in server case - we wait for clients here
     // in client case - we wait for handshake response here
-    for (auto it : data_) {
-        std::cerr << "trying " << it.first.first << " " << it.first.second << " | sock: " << it.second.socket.first << "\n";
-        switch (it.second.role) {
-        case BaseTypes::Role::CLIENT: {
-            // TODO: for now we assume that client handshake always works
-            if (it.second.socket.second == SocketState::BEFORE_HANDSHAKE) {
-                it.second.socket.second = SocketState::AFTER_HANDSHAKE;
-            }
-            break;
-        }
-        case BaseTypes::Role::SERVER: {
-            if (it.second.clientSockets.size() > 0) {
-                std::cerr << "checkForSessions one client supported now, ignoring request\n";
-                continue;
-            }
-            BaseTypes::Socket sock = it.second.socket.first;
+    std::cerr << "processing " << it->first.first << " " << it->first.second << " | sock: " << it->second.socket.first << "\n";
+    switch (it->second.role) {
+    case BaseTypes::Role::CLIENT: {
+            // Connected to server, wait for data
+            BaseTypes::Data data;
+            waitForData(it->second.socket, data);
+            call_function(aLSessDataIndicationCB, it->first.first, it->first.second, data);
+        break;
+    }
+    case BaseTypes::Role::SERVER: {
+        if (it->second.clientSockets.size() == 0) {
+            // No clients are connected, wait for the 1st connection
+            BaseTypes::Socket sock = it->second.socket.first;
             struct sockaddr_in addr;
             unsigned int len = sizeof(addr);
             int client = accept(sock, (struct sockaddr*)&addr, &len);
             if (client < 0) {
                 perror("accept");
-                continue;
             }
             //TODO: here handshake check should happen
-            it.second.clientSockets.push_back(SocketWithState(client, SocketState::AFTER_HANDSHAKE));
+            it->second.clientSockets.push_back(SocketWithState(client, SocketState::AFTER_HANDSHAKE));
             BaseTypes::Certificate cert({0xDE, 0xAD});
-            call_function(secSessionStartIndicationCB, it.first.first, it.first.second, cert);
-            break;
+            call_function(secSessionStartIndicationCB, it->first.first, it->first.second, cert);
+        } else if (it->second.clientSockets.size() == 1) {
+            // Client is connected, wait for data
+            BaseTypes::Data data;
+            waitForData(*(it->second.clientSockets.begin()), data);
+            call_function(aLSessDataIndicationCB, it->first.first, it->first.second, data);
+        } else {
+            std::cerr << "More than one client connected, this should not happen\n";
         }
-        }
+        break;
+    }
     }
 }
 
@@ -185,4 +209,21 @@ void SecureSession::attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionI
     std::cerr << "SecureSession::attemptHandshake\n";
     BaseTypes::Data data({0x99, 0x98, 0x97, 0x96});
     this->ALSessDataRequest(appId, sessId, data);
+}
+
+void SecureSession::waitForData(SecureSession::SocketWithState sock, BaseTypes::Data &readData)
+{
+    std::array<uint8_t, 1024> buffer;
+
+    if (sock.second != SocketState::AFTER_HANDSHAKE) {
+        std::cerr << "socket is in state: " << (int)(sock.second) << " not valid for reading data, skipping...\n";
+        return;
+    }
+    int received = recv(sock.first, buffer.data(), buffer.size(), 0);
+    std::cerr << "received " << received << "\n";
+    if (received < 0) {
+        perror("recv failed\n");
+        return;
+    }
+    std::copy(buffer.begin(), buffer.begin() + received, std::back_inserter(readData));
 }

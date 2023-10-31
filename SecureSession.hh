@@ -56,11 +56,10 @@ public:
     void receiveData(const std::vector<uint8_t>& data);
     // This is called when a session is lost
     void sessionTerminated();
-    void checkForSessions();
+    void waitForNetworkInput();
 
 private:
     enum class SocketState { CREATED, BEFORE_HANDSHAKE, AFTER_HANDSHAKE, SERVER_SOCKET};
-    void attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId);
     typedef std::pair<BaseTypes::AppId, BaseTypes::SessionId> key_t;
     typedef std::pair<BaseTypes::Socket, SocketState> SocketWithState;
     struct sessionData {
@@ -70,4 +69,7 @@ private:
         std::vector<SocketWithState> clientSockets;
     };
     std::map<key_t, sessionData> data_;
+
+    void attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId);
+    void waitForData(SocketWithState sock, BaseTypes::Data& readData);
 };

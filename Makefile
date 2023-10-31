@@ -33,4 +33,4 @@ Example: $(SOURCES) $(OBJECTS)
 	$(LINK.o)
 
 clean:
-	rm -rf *.o example
+	rm -rf *.o Example Example-debug

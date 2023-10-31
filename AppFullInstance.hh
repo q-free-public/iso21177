@@ -16,7 +16,8 @@ public:
         BaseTypes::SessionId sessionId,
         BaseTypes::Role role);
 
-    void checkIncomingSessions();
+    void waitForNetworkInput();
+    void sendData(BaseTypes::Data& data);
 private:
     std::shared_ptr<SecureSession> secureSession;
     std::shared_ptr<SecuritySubsystem> secSubsystem;
