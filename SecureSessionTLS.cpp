@@ -29,7 +29,7 @@ void SecureSessionTLS::SecSessConfigureRequest(
         const BaseTypes::IssuerConstraints &issuerConstraints)
 {
     std::cerr << "SecureSessionTLS::SecSessConfigureRequest" << " APP ID " << appId << "\n";
-    std::cerr << "SecureSessionTLS will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << cryptomaterialHandle << "\n";
+    std::cerr << "SecureSession will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << cryptomaterialHandle << "\n";
     if (data_.size() >= 1) {
         // TODO: For now, only a single session is allowed
         std::cerr << "Reached max allowed sessions: " << data_.size() << "\n";
@@ -106,7 +106,8 @@ void SecureSessionTLS::ALSessEndSessionRequest(const BaseTypes::AppId &appId, co
         // in server case we close client socket (if open)
         if (it->second.clientSockets.size() == 1) {
             auto ptr = it->second.clientSockets.begin();
-            std::cerr << "closing client socket\n";
+            // TODO: maybe terminate a session here if necessary
+            std::cerr << "closing client socket in server\n";
             it->second.clientSockets.erase(ptr);
         }
         break;
@@ -183,6 +184,7 @@ void SecureSessionTLS::waitForNetworkInput()
     }
     case BaseTypes::Role::SERVER: {
         if (it->second.clientSockets.size() == 0) {
+            std::cerr << "SERVER : no clients connected, waiting for the 1st\n";
             // No clients are connected, wait for the 1st connection
             BaseTypes::Socket sock = it->second.socket.first;
             if (!sock) {
@@ -190,10 +192,11 @@ void SecureSessionTLS::waitForNetworkInput()
                 return;
             }
             auto client_sock = sock->acceptConnection();
-            it->second.clientSockets.push_back(SocketWithState(std::move(client_sock), SocketState::BEFORE_HANDSHAKE));
             //TODO: here handshake check should happen
+            it->second.clientSockets.push_back(SocketWithState(std::move(client_sock), SocketState::AFTER_HANDSHAKE));
         } else if (it->second.clientSockets.size() == 1) {
             // Client is connected, wait for data
+            std::cerr << "SERVER : Client is connected, wait for data\n";
             BaseTypes::Data data;
             auto sockWithStatePtr = it->second.clientSockets.begin();
             waitForData(*sockWithStatePtr, data);
@@ -203,9 +206,9 @@ void SecureSessionTLS::waitForNetworkInput()
             if (data.size() == 0) {
                 std::cerr << "Socket is closed on the other side\n";
                 sockWithStatePtr->second = SocketState::OTHER_SIDE_CLOSED;
-                call_function(secSessEndSessionIndicationCB, it->first.first, it->first.second);
                 // Accepted socket is opened here, will be closed when ptr is destroyed
                 it->second.clientSockets.erase(sockWithStatePtr);
+                call_function(secSessEndSessionIndicationCB, it->first.first, it->first.second);
             };
         } else {
             std::cerr << "More than one client connected, this should not happen\n";
