@@ -10,6 +10,7 @@
 class AppFullInstance {
 public:
     AppFullInstance();
+    AppFullInstance(std::shared_ptr<SecureSession> secSession);
     ~AppFullInstance();
 
     void configureApplication(

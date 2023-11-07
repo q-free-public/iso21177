@@ -1,6 +1,7 @@
 #include "AppFullInstance.hh"
 
 #include <unistd.h>
+#include "SocketTCP.hh"
 
 AppFullInstance::AppFullInstance()
 : secureSession(new SecureSession())
@@ -17,9 +18,23 @@ AppFullInstance::AppFullInstance()
     std::cerr <<"Init DONE\n";
 }
 
+AppFullInstance::AppFullInstance(std::shared_ptr<SecureSession> secSession)
+: secureSession(secSession)
+, secSubsystem(new SecuritySubsystem())
+, adaptorLayer(new AdaptorLayer())
+, appEx(new ApplicationElementExample())
+{
+    appEx->registerSecuritySubsystemAPI(secSubsystem);
+    appEx->registerAdaptorLayerAPI(adaptorLayer);
+    secSubsystem->registerSecureSessionSecSubAPI(secureSession);
+    secSubsystem->registerAdaptorLayerSecSubAPI(adaptorLayer);
+    adaptorLayer->registerSecSessAPI(secureSession);
+
+    std::cerr <<"Init DONE\n";
+}
+
 AppFullInstance::~AppFullInstance()
 {
-    this->closeSocket();
 }
 
 void AppFullInstance::configureApplication(
@@ -35,18 +50,16 @@ void AppFullInstance::configureApplication(
     BaseTypes::Socket sock;
     switch (role) {
         case BaseTypes::Role::SERVER: {
-            sock = createServerSocket(port);
+            sock = std::make_shared<SocketTCP>(Socket::Type::SERVER, port);
             break;
         }
         case BaseTypes::Role::CLIENT: {
-            sock = createClientSocket(port);
+            sock = std::make_shared<SocketTCP>(Socket::Type::CLIENT, port);
             break;
         }
     }
-    std::cerr << "Socket number " << sock << "\n";
     this->data_ = std::make_shared<data_t>(role, sock, appId, sessionId, cryptoHandle);
-    std::cerr << "Socket number " << this->data_->sock << "\n";
-
+    
     secSubsystem->AppSecConfigureRequest(
             this->data_->appId,
             this->data_->role,
@@ -100,11 +113,10 @@ void AppFullInstance::forceEndSession()
 void AppFullInstance::closeSocket()
 {
     if (this->data_) {
-        if (this->data_->sock >= 0) {
-            std::cerr << "Closing socket\n";
-            close(this->data_->sock);
-            this->data_->sock = -1;
-        }
+        std::cerr << "Try to close socket\n";
+        this->data_->sock->closeSocket();
+    } else {
+        std::cerr << "No data - failed to close the socket\n";
     }
 }
 

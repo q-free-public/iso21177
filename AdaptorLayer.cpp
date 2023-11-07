@@ -87,6 +87,7 @@ void AdaptorLayer::SecALEndSessionRequest(
     const BaseTypes::AppId &appId,
     const BaseTypes::SessionId &sessionId)
 {
+    //XXX: This has an issue - in some cases it should not call SecSession, but it has no way of knowing
     std::cerr << "AdaptorLayer::SecALEndSessionRequest\n";
     call_function(secALEndSessionConfirmCB);
     if (auto sptr = secSessALAPI.lock()) {

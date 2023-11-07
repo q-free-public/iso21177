@@ -1,4 +1,4 @@
-#include "SecureSession.hh"
+#include "SecureSessionTLS.hh"
 
 #include <array>
 #include <iostream>
@@ -8,11 +8,11 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-SecureSession::SecureSession()
+SecureSessionTLS::SecureSessionTLS()
 {
 }
 
-void SecureSession::SecSessConfigureRequest(
+void SecureSessionTLS::SecSessConfigureRequest(
         const BaseTypes::AppId &appId, BaseTypes::Role role,
         const BaseTypes::Socket socket,
         BaseTypes::SessionType sessionType, bool proxied,
@@ -28,8 +28,8 @@ void SecureSession::SecSessConfigureRequest(
         const BaseTypes::NameConstraints &nameConstraints,
         const BaseTypes::IssuerConstraints &issuerConstraints)
 {
-    std::cerr << "SecureSession::SecSessConfigureRequest" << " APP ID " << appId << "\n";
-    std::cerr << "SecureSession will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << cryptomaterialHandle << "\n";
+    std::cerr << "SecureSessionTLS::SecSessConfigureRequest" << " APP ID " << appId << "\n";
+    std::cerr << "SecureSessionTLS will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << cryptomaterialHandle << "\n";
     if (data_.size() >= 1) {
         // TODO: For now, only a single session is allowed
         std::cerr << "Reached max allowed sessions: " << data_.size() << "\n";
@@ -52,12 +52,12 @@ void SecureSession::SecSessConfigureRequest(
     call_function(secSessConfigureConfirmCB);
 }
 
-void SecureSession::ALSessDataRequest(
+void SecureSessionTLS::ALSessDataRequest(
     const BaseTypes::AppId &appId,
     const BaseTypes::SessionId &sessionId,
     const BaseTypes::Data &apduToSend)
 {
-    std::cerr << "SecureSession::ALSessDataRequest" << "\n";
+    std::cerr << "SecureSessionTLS::ALSessDataRequest" << "\n";
     call_function(aLSessDataConfirmCB);
     //TODO: fragments and cryptographically protects
     // passes to the network for transmission
@@ -75,7 +75,7 @@ void SecureSession::ALSessDataRequest(
         }
         sockWithState = *(it->second.clientSockets.begin());
     }
-    std::cerr << "====SecureSession::ALSessDataRequest sock: " << sockWithState.first << "\n";
+    std::cerr << "====SecureSessionTLS::ALSessDataRequest sock: " << sockWithState.first << "\n";
     if (sockWithState.second != SocketState::AFTER_HANDSHAKE) {
         std::cerr << "!!!!!! invalid socket state : " << (int)(sockWithState.second) << "\n";
         return;
@@ -86,12 +86,12 @@ void SecureSession::ALSessDataRequest(
         return;
     }
     int sent = sock_ptr->sendData(apduToSend);
-    std::cerr << "SecureSession::ALSessDataRequest : sent " << sent << " data size: " << apduToSend.size() << "\n";
+    std::cerr << "SecureSessionTLS::ALSessDataRequest : sent " << sent << " data size: " << apduToSend.size() << "\n";
 }
 
-void SecureSession::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)
+void SecureSessionTLS::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)
 {
-    std::cerr << "SecureSession::ALSessEndSessionRequest" << "\n";
+    std::cerr << "SecureSessionTLS::ALSessEndSessionRequest" << "\n";
     if (data_.size() != 1) {
         std::cerr << "No sessions registered, exiting\n";
     }
@@ -106,8 +106,7 @@ void SecureSession::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const
         // in server case we close client socket (if open)
         if (it->second.clientSockets.size() == 1) {
             auto ptr = it->second.clientSockets.begin();
-            // TODO: maybe terminate a session here if necessary
-            std::cerr << "closing client socket in server\n";
+            std::cerr << "closing client socket\n";
             it->second.clientSockets.erase(ptr);
         }
         break;
@@ -116,11 +115,11 @@ void SecureSession::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const
     call_function(aLSessEndSessionConfirmCB);
 }
 
-void SecureSession::SecSessDeactivateRequest(
+void SecureSessionTLS::SecSessDeactivateRequest(
     const BaseTypes::AppId &appId,
     const BaseTypes::SecureSessionInstanceId &secSessInstanceId)
 {
-    std::cerr << "SecureSession::SecSessDeactivateRequest\n";
+    std::cerr << "SecureSessionTLS::SecSessDeactivateRequest\n";
     // No more new connections
     call_function(secSessDeactivateConfirmCB);
     // TODO: IF server -> stop accepting incorming connections
@@ -129,7 +128,7 @@ void SecureSession::SecSessDeactivateRequest(
     // TODO: delete all state relevant to new sessions
 }
 
-void SecureSession::afterHandshake()
+void SecureSessionTLS::afterHandshake()
 {
     BaseTypes::AppId appId = 1;
     BaseTypes::SessionId sessionId = 1;
@@ -138,7 +137,7 @@ void SecureSession::afterHandshake()
             appId, sessionId, cert);
 }
 
-void SecureSession::receiveData(const std::vector<uint8_t> &data)
+void SecureSessionTLS::receiveData(const std::vector<uint8_t> &data)
 {
     // Check if session timed out
     BaseTypes::AppId appId = 10;
@@ -146,14 +145,14 @@ void SecureSession::receiveData(const std::vector<uint8_t> &data)
     call_function(aLSessDataIndicationCB, appId, sessionId, data);
 }
 
-void SecureSession::sessionTerminated()
+void SecureSessionTLS::sessionTerminated()
 {
     BaseTypes::AppId appId(16);
     BaseTypes::SessionId sessionId(8);
     call_function(secSessEndSessionIndicationCB, appId, sessionId);
 }
 
-void SecureSession::waitForNetworkInput()
+void SecureSessionTLS::waitForNetworkInput()
 {
     // Currently there is just a simple implementation which waits for a single socket.
     // in case of client this is a socket with connection to the server
@@ -184,7 +183,6 @@ void SecureSession::waitForNetworkInput()
     }
     case BaseTypes::Role::SERVER: {
         if (it->second.clientSockets.size() == 0) {
-            std::cerr << "SERVER : no clients connected, waiting for the 1st\n";
             // No clients are connected, wait for the 1st connection
             BaseTypes::Socket sock = it->second.socket.first;
             if (!sock) {
@@ -192,11 +190,10 @@ void SecureSession::waitForNetworkInput()
                 return;
             }
             auto client_sock = sock->acceptConnection();
+            it->second.clientSockets.push_back(SocketWithState(std::move(client_sock), SocketState::BEFORE_HANDSHAKE));
             //TODO: here handshake check should happen
-            it->second.clientSockets.push_back(SocketWithState(std::move(client_sock), SocketState::AFTER_HANDSHAKE));
         } else if (it->second.clientSockets.size() == 1) {
             // Client is connected, wait for data
-            std::cerr << "SERVER : Client is connected, wait for data\n";
             BaseTypes::Data data;
             auto sockWithStatePtr = it->second.clientSockets.begin();
             waitForData(*sockWithStatePtr, data);
@@ -206,9 +203,9 @@ void SecureSession::waitForNetworkInput()
             if (data.size() == 0) {
                 std::cerr << "Socket is closed on the other side\n";
                 sockWithStatePtr->second = SocketState::OTHER_SIDE_CLOSED;
+                call_function(secSessEndSessionIndicationCB, it->first.first, it->first.second);
                 // Accepted socket is opened here, will be closed when ptr is destroyed
                 it->second.clientSockets.erase(sockWithStatePtr);
-                call_function(secSessEndSessionIndicationCB, it->first.first, it->first.second);
             };
         } else {
             std::cerr << "More than one client connected, this should not happen\n";
@@ -218,15 +215,15 @@ void SecureSession::waitForNetworkInput()
     }
 }
 
-void SecureSession::attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId)
+void SecureSessionTLS::attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId)
 {
     //TODO: this is the fake implementation
-    std::cerr << "SecureSession::attemptHandshake\n";
+    std::cerr << "SecureSessionTLS::attemptHandshake\n";
     BaseTypes::Data data({0x99, 0x98, 0x97, 0x96});
     this->ALSessDataRequest(appId, sessId, data);
 }
 
-void SecureSession::waitForData(SecureSession::SocketWithState sock, BaseTypes::Data &readData)
+void SecureSessionTLS::waitForData(SecureSessionTLS::SocketWithState sock, BaseTypes::Data &readData)
 {
     auto sock_ptr = sock.first;
     if (!sock_ptr) {

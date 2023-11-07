@@ -5,12 +5,12 @@
 
 #include "SecureSessionSecSubAPI.hh"
 #include "SecureSessionALAPI.hh"
+#include "SecureSession.hh"
 
-class SecureSession : 
-        public SecureSessionSecSubAPI,
-        public SecureSessionALAPI {
+class SecureSessionTLS : 
+        public SecureSession {
 public:
-    SecureSession();
+    SecureSessionTLS();
 
     virtual void SecSessConfigureRequest(
         const BaseTypes::AppId& appId,
@@ -50,12 +50,12 @@ public:
     );
 
     // This should be triggered by TLS handshake completion
-    virtual void afterHandshake();
+    void afterHandshake();
     // This is what comes from a socket
-    virtual void receiveData(const std::vector<uint8_t>& data);
+    void receiveData(const std::vector<uint8_t>& data);
     // This is called when a session is lost
-    virtual void sessionTerminated();
-    virtual void waitForNetworkInput();
+    void sessionTerminated();
+    void waitForNetworkInput();
 
 private:
     enum class SocketState { CREATED, BEFORE_HANDSHAKE, AFTER_HANDSHAKE, OTHER_SIDE_CLOSED, SERVER_SOCKET};
@@ -66,9 +66,10 @@ private:
         SocketWithState socket;
         // non-empty only in server role
         std::vector<SocketWithState> clientSockets;
+
     };
     std::map<key_t, sessionData> data_;
 
-    virtual void attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId);
-    virtual void waitForData(SocketWithState sock, BaseTypes::Data& readData);
+    void attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId);
+    void waitForData(SocketWithState sock, BaseTypes::Data& readData);
 };

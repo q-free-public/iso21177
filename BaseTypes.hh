@@ -6,12 +6,13 @@
 #include <vector>
 #include <functional>
 
+#include "Socket.hh"
 
 namespace BaseTypes {
     // 7.7.1 App-Sec-Configure Request
     typedef uint64_t AppId;
     enum class Role { CLIENT, SERVER};
-    typedef int Socket;
+    typedef std::shared_ptr<Socket> Socket;
     enum class SessionType { INTERNAL, EXTERNAL };
     enum class TransportMechanismType { RELIABLE, UNRELIABLE};
     typedef std::string CryptomaterialHandle;
@@ -52,9 +53,3 @@ void call_function(std::function<void(Args1...)> fn, Args2... args) {
         fn(args...);
     }
 }
-
-BaseTypes::Socket createServerSocket(int port);
-BaseTypes::Socket createClientSocket(int port);
-
-
-void testAccept(BaseTypes::Socket sock);

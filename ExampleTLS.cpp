@@ -6,6 +6,7 @@
 #include "ApplicationElementExample.hh"
 #include "SecuritySubsystemAppAPI.hh"
 #include "SecureSession.hh"
+#include "SecureSessionTLS.hh"
 #include "SecuritySubsystem.hh"
 #include "AdaptorLayer.hh"
 
@@ -68,8 +69,8 @@ int main() {
 
     if (true){
         std::cerr << "======> Now without threads\n";
-        AppFullInstance appServ;
-        AppFullInstance appClient;
+        AppFullInstance appServ(std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
+        AppFullInstance appClient(std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
 
         appServ.configureApplication(123, BaseTypes::Role::SERVER);
         std::cerr << "====> Server now configured\n";
@@ -92,7 +93,6 @@ int main() {
 
         std::cerr << "====> Client will End session\n";
         appClient.forceEndSession();
-        appClient.closeSocket();
 
         std::cerr << "====> Server will send out data\n";
         appServ.sendData(serverMessage);   
@@ -100,7 +100,7 @@ int main() {
         std::cerr << "====> Server will wait for data\n";
         appServ.waitForNetworkInput();
     }
-    if (false){
+    if (false) {
         AppFullInstance appServ;
         AppFullInstance appClient;
 

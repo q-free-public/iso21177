@@ -9,6 +9,7 @@
 #include "SecureSession.hh"
 #include "SecuritySubsystem.hh"
 #include "AdaptorLayer.hh"
+#include "SocketTCP.hh"
 
 int main() {
     std::shared_ptr<SecureSession> secureSession(new SecureSession());
@@ -26,8 +27,8 @@ int main() {
 
     BaseTypes::AppId appId = 123;
     int port = 1337;
-    BaseTypes::Socket serverSocket = createServerSocket(port);
-    BaseTypes::Socket clientSocket = createClientSocket(port);
+    BaseTypes::Socket serverSocket = std::make_shared<SocketTCP>(Socket::Type::SERVER, port);
+    BaseTypes::Socket clientSocket = std::make_shared<SocketTCP>(Socket::Type::CLIENT, port);
     if (serverSocket < 0 || clientSocket < 0) {
         std::cerr << "One of the sockets is invalid\n";
         return -1;
