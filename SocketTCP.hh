@@ -14,8 +14,8 @@ public:
     virtual std::unique_ptr<Socket> acceptConnection();
     virtual int sendData(const std::vector<uint8_t>& data);
     virtual void closeSocket();
+    virtual int getFd();
 private:
-    int getSocket();
     SocketTCP(std::unique_ptr<int>&& sock);
     std::unique_ptr<int> sock_;
 };

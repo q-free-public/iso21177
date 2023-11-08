@@ -35,12 +35,13 @@ void SecureSessionTLS::SecSessConfigureRequest(
         std::cerr << "Reached max allowed sessions: " << data_.size() << "\n";
     } else {
         sessionData data;
-        data.socket = SocketWithState(socket, SocketState::CREATED);
+        auto socketTLS_ptr = std::make_shared<SocketTLS>(socket);
+        data.socket = SocketWithState(socketTLS_ptr, SocketState::CREATED);
         data.role = role;
         key_t key(appId, sessionId);
         if (role == BaseTypes::Role::CLIENT) {
-            attemptHandshake(appId, sessionId);
             data.socket.second = SocketState::BEFORE_HANDSHAKE;
+            data.socket.first->attemptHandshakeAsClient();
             // TODO: for now we assume that client handshake always works
             data.socket.second = SocketState::AFTER_HANDSHAKE;
         }
@@ -177,7 +178,6 @@ void SecureSessionTLS::waitForNetworkInput()
             }
             if (data.size() == 0) {
                 std::cerr << "Socket is closed on the other side\n";
-
                 call_function(secSessEndSessionIndicationCB, it->first.first, it->first.second);
             };
         break;
@@ -192,8 +192,13 @@ void SecureSessionTLS::waitForNetworkInput()
                 return;
             }
             auto client_sock = sock->acceptConnection();
+            std::cerr << "Client connection accepted\n";
+            auto clientTLSSock_ptr = std::make_shared<SocketTLS>(std::move(client_sock));
             //TODO: here handshake check should happen
-            it->second.clientSockets.push_back(SocketWithState(std::move(client_sock), SocketState::AFTER_HANDSHAKE));
+            if (!clientTLSSock_ptr->checkHandshakeAsServer()) {
+                std::cerr << "Handshake check failed\n";
+            }
+            it->second.clientSockets.push_back(SocketWithState(std::move(clientTLSSock_ptr), SocketState::AFTER_HANDSHAKE));
         } else if (it->second.clientSockets.size() == 1) {
             // Client is connected, wait for data
             std::cerr << "SERVER : Client is connected, wait for data\n";

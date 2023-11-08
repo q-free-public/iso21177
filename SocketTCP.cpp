@@ -90,7 +90,7 @@ SocketTCP::SocketTCP(Socket::Type type, int port)
             break;
         }
     }
-    if (!(this->sock_) || getSocket() <= 0) {
+    if (!(this->sock_) || getFd() <= 0) {
         throw std::runtime_error("failed to create socket");
     }
 }
@@ -101,7 +101,7 @@ SocketTCP::~SocketTCP()
 }
 
 SocketTCP::SocketTCP(std::unique_ptr<int>&& sock)
-: Socket(Socket::Type::CLIENT)
+: Socket(Socket::Type::SERVER)
 , sock_(std::move(sock))
 {
 }
@@ -110,7 +110,7 @@ void SocketTCP::getData(std::vector<uint8_t> &data)
 {
     std::array<uint8_t, 1024> buffer;
 
-    int received = recv(getSocket(), buffer.data(), buffer.size(), 0);
+    int received = recv(getFd(), buffer.data(), buffer.size(), 0);
     std::cerr << "received " << received << "\n";
     if (received < 0) {
         perror("recv failed\n");
@@ -127,7 +127,7 @@ std::unique_ptr<Socket> SocketTCP::acceptConnection()
     }
     struct sockaddr_in addr;
     unsigned int len = sizeof(addr);
-    int client = accept(getSocket(), (struct sockaddr*)&addr, &len);
+    int client = accept(getFd(), (struct sockaddr*)&addr, &len);
     if (client < 0) {
         perror("accept");
     }
@@ -136,19 +136,19 @@ std::unique_ptr<Socket> SocketTCP::acceptConnection()
 
 int SocketTCP::sendData(const std::vector<uint8_t> &data)
 {
-    return send(getSocket(), data.data(), data.size(), 0);
+    return send(getFd(), data.data(), data.size(), 0);
 }
 
 void SocketTCP::closeSocket()
 {
     if (this->sock_) {
         std::cerr << "Closing socket\n";
-        close(getSocket());
+        close(getFd());
         this->sock_.reset();
     }
 }
 
-int SocketTCP::getSocket()
+int SocketTCP::getFd()
 {
     return (*this->sock_.get());
 }

@@ -18,7 +18,7 @@ std::mutex m;
 bool serverReady = false;
 
 auto serverThreadFn = [](){
-    AppFullInstance appServ;
+    AppFullInstance appServ(std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
 
     appServ.configureApplication(123, BaseTypes::Role::SERVER);
     std::cerr << "====> Server now configured\n";
@@ -39,7 +39,7 @@ auto serverThreadFn = [](){
 };
 
 auto clientThreadFn = [](){
-    AppFullInstance appClient;
+    AppFullInstance appClient(std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
 
     std::unique_lock<std::mutex> lock{m};
     cond_var.wait(lock, []() { return serverReady; });
@@ -63,11 +63,11 @@ void runWithThreads() {
 }
 
 int main() {
-    if (false) {
+    if (true) {
         runWithThreads();
     }
 
-    if (true){
+    if (false){
         std::cerr << "======> Now without threads\n";
         AppFullInstance appServ(std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
         AppFullInstance appClient(std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
