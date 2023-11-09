@@ -13,10 +13,11 @@ class SocketTLS : public Socket {
 public:
     SocketTLS(std::shared_ptr<Socket> s);
     ~SocketTLS();
+    virtual std::unique_ptr<Socket> acceptClientConnection();
+    virtual void connectToServer();
     bool attemptHandshakeAsClient();
     bool checkHandshakeAsServer();
     virtual void getData(std::vector<uint8_t>& data);
-    virtual std::unique_ptr<Socket> acceptConnection();
     virtual int sendData(const std::vector<uint8_t>& data);
     virtual void closeSocket();
     virtual int getFd();

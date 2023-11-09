@@ -141,9 +141,15 @@ void SocketTLS::getData(std::vector<uint8_t> &data)
 {
 }
 
-std::unique_ptr<Socket> SocketTLS::acceptConnection()
+std::unique_ptr<Socket> SocketTLS::acceptClientConnection()
 {
-    return socketBase_->acceptConnection();
+    auto clientSocketTLS = std::make_unique<SocketTLS>(socketBase_->acceptClientConnection());
+    return clientSocketTLS;
+}
+
+void SocketTLS::connectToServer()
+{
+    socketBase_->connectToServer();
 }
 
 int SocketTLS::sendData(const std::vector<uint8_t> &data)

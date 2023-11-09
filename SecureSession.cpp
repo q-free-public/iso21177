@@ -39,7 +39,9 @@ void SecureSession::SecSessConfigureRequest(
         data.role = role;
         key_t key(appId, sessionId);
         if (role == BaseTypes::Role::CLIENT) {
-            attemptHandshake(appId, sessionId);
+            data.socket.first->connectToServer();
+            data.socket.first->attemptHandshakeAsClient();
+            //attemptHandshake(appId, sessionId);
             data.socket.second = SocketState::BEFORE_HANDSHAKE;
             // TODO: for now we assume that client handshake always works
             data.socket.second = SocketState::AFTER_HANDSHAKE;
@@ -191,7 +193,7 @@ void SecureSession::waitForNetworkInput()
                 std::cerr << "invalid socket\n";
                 return;
             }
-            auto client_sock = sock->acceptConnection();
+            auto client_sock = sock->acceptClientConnection();
             //TODO: here handshake check should happen
             it->second.clientSockets.push_back(SocketWithState(std::move(client_sock), SocketState::AFTER_HANDSHAKE));
         } else if (it->second.clientSockets.size() == 1) {

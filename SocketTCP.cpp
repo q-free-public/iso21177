@@ -50,27 +50,11 @@ static int createServerSocket(int port)
 static int createClientSocket(int port)
 {
     int s;
-    struct sockaddr_in addr;
     int opt = 1;
-
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
 
     s = socket(AF_INET, SOCK_STREAM, 0);
     if (s < 0) {
         perror("Unable to create socket");
-        return -1;
-    }
-
-    // Convert IPv4 and IPv6 addresses from text to binary
-    // form
-    if (inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) <= 0) {
-        printf("Invalid address/ Address not supported \n");
-        return -1;
-    }
-
-    if (connect(s, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-        perror("Connection Failed \n");
         return -1;
     }
 
@@ -79,6 +63,7 @@ static int createClientSocket(int port)
 
 SocketTCP::SocketTCP(Socket::Type type, int port)
 : Socket(type)
+, port_(port)
 {
     switch (type_) {
         case Socket::Type::CLIENT: {
@@ -119,7 +104,28 @@ void SocketTCP::getData(std::vector<uint8_t> &data)
     std::copy(buffer.begin(), buffer.begin() + received, std::back_inserter(data));
 }
 
-std::unique_ptr<Socket> SocketTCP::acceptConnection()
+void SocketTCP::connectToServer()
+{
+    struct sockaddr_in addr;
+
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port_);
+
+    // Convert IPv4 and IPv6 addresses from text to binary
+    // form
+    if (inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) <= 0) {
+        printf("Invalid address/ Address not supported \n");
+        throw std::runtime_error("SocketTCP::connectToServer");
+    }
+
+    if (connect(getFd(), (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+        perror("Connection Failed \n");
+        throw std::runtime_error("SocketTCP::connectToServer");
+    }
+
+}
+
+std::unique_ptr<Socket> SocketTCP::acceptClientConnection()
 {
     if (type_ != Socket::Type::SERVER) {
         std::cerr << "Unable to accept connection on a client socket\n";
