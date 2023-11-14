@@ -91,7 +91,7 @@ SocketTCP::SocketTCP(std::unique_ptr<int>&& sock)
 {
 }
 
-void SocketTCP::getData(std::vector<uint8_t> &data)
+int SocketTCP::getData(std::vector<uint8_t> &data)
 {
     std::array<uint8_t, 1024> buffer;
 
@@ -99,9 +99,10 @@ void SocketTCP::getData(std::vector<uint8_t> &data)
     std::cerr << "received " << received << "\n";
     if (received < 0) {
         perror("recv failed\n");
-        return;
+        return received;
     }
     std::copy(buffer.begin(), buffer.begin() + received, std::back_inserter(data));
+    return data.size();
 }
 
 void SocketTCP::connectToServer()

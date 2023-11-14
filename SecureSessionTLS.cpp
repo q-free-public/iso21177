@@ -8,6 +8,9 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+#include "SocketServerTLS.hh"
+#include "SocketClientTLS.hh"
+
 SecureSessionTLS::SecureSessionTLS()
 {
 }
@@ -29,24 +32,27 @@ void SecureSessionTLS::SecSessConfigureRequest(
         const BaseTypes::IssuerConstraints &issuerConstraints)
 {
     std::cerr << "SecureSessionTLS::SecSessConfigureRequest" << " APP ID " << appId << "\n";
-    std::cerr << "SecureSession will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << cryptomaterialHandle << "\n";
+    std::cerr << "SecureSession will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << hex_string(cryptomaterialHandle) << "\n";
     if (data_.size() >= 1) {
         // TODO: For now, only a single session is allowed
         std::cerr << "Reached max allowed sessions: " << data_.size() << "\n";
     } else {
         sessionData data;
-        auto socketTLS_ptr = std::make_shared<SocketTLS>(socket);
-        data.socket = SocketWithState(socketTLS_ptr, SocketState::CREATED);
         data.role = role;
         key_t key(appId, sessionId);
         if (role == BaseTypes::Role::CLIENT) {
+            auto socketTLS_ptr = std::make_shared<SocketClientTLS>(socket, appId, cryptomaterialHandle);
+            data.socket = SocketWithState(socketTLS_ptr, SocketState::CREATED);
             data.socket.second = SocketState::BEFORE_HANDSHAKE;
             data.socket.first->connectToServer();
-            data.socket.first->attemptHandshakeAsClient();
-            // TODO: for now we assume that client handshake always works
+            if (!data.socket.first->attemptHandshakeAsClient(appId, cryptomaterialHandle)) {
+
+            }
             data.socket.second = SocketState::AFTER_HANDSHAKE;
         }
         if (role == BaseTypes::Role::SERVER) {
+            auto socketTLS_ptr = std::make_shared<SocketServerTLS>(socket, appId, cryptomaterialHandle);
+            data.socket = SocketWithState(socketTLS_ptr, SocketState::SERVER_SOCKET);
             data.socket.second = SocketState::SERVER_SOCKET;
         }
         data_[key] = data;
@@ -77,7 +83,7 @@ void SecureSessionTLS::ALSessDataRequest(
         }
         sockWithState = *(it->second.clientSockets.begin());
     }
-    std::cerr << "====SecureSessionTLS::ALSessDataRequest sock: " << sockWithState.first << "\n";
+    std::cerr << "SecureSessionTLS::ALSessDataRequest sock: " << sockWithState.first->getFd() << "\n";
     if (sockWithState.second != SocketState::AFTER_HANDSHAKE) {
         std::cerr << "!!!!!! invalid socket state : " << (int)(sockWithState.second) << "\n";
         return;
@@ -129,6 +135,13 @@ void SecureSessionTLS::SecSessDeactivateRequest(
     // TODO: IF client -> stop attempting new outgoing connections
     
     // TODO: delete all state relevant to new sessions
+}
+
+void SecureSessionTLS::afterHandshake(const BaseTypes::AppId& appId, 
+        const BaseTypes::SessionId& sessionId, const BaseTypes::Certificate& cert)
+{
+    call_function(secSessionStartIndicationCB,
+            appId, sessionId, cert);
 }
 
 void SecureSessionTLS::afterHandshake()
@@ -187,18 +200,23 @@ void SecureSessionTLS::waitForNetworkInput()
         if (it->second.clientSockets.size() == 0) {
             std::cerr << "SERVER : no clients connected, waiting for the 1st\n";
             // No clients are connected, wait for the 1st connection
-            BaseTypes::Socket sock = it->second.socket.first;
+            auto sock = it->second.socket.first;
             if (!sock) {
                 std::cerr << "invalid socket\n";
                 return;
             }
-            std::unique_ptr<Socket> clientSocketTLS = sock->acceptClientConnection();
+            std::unique_ptr<SocketTLS> clientSocketTLS = sock->acceptClientConnectionTLS();
             std::cerr << "Client connection accepted\n";
             //TODO: here handshake check should happen
             if (!clientSocketTLS->checkHandshakeAsServer()) {
                 std::cerr << "Handshake check failed\n";
             }
-            it->second.clientSockets.push_back(SocketWithState(std::shared_ptr<Socket>(std::move(clientSocketTLS)), SocketState::AFTER_HANDSHAKE));
+            std::cerr << "Client connection handshake checked \n";
+            it->second.clientSockets.push_back(SocketWithState(std::shared_ptr<SocketTLS>(std::move(clientSocketTLS)), SocketState::AFTER_HANDSHAKE));
+            BaseTypes::AppId appId = 1;
+            BaseTypes::SessionId sessionId = 1;
+            BaseTypes::Certificate cert = it->second.clientSockets.begin()->first.get()->getPeerCertificate();
+            this->afterHandshake(it->first.first, it->first.second, cert);
         } else if (it->second.clientSockets.size() == 1) {
             // Client is connected, wait for data
             std::cerr << "SERVER : Client is connected, wait for data\n";

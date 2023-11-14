@@ -36,7 +36,7 @@ int main() {
 
     BaseTypes::SessionId sessionIdServer = 456;
     BaseTypes::SessionId sessionIdClient = 888;
-    BaseTypes::CryptomaterialHandle cryptoHandle = "Very Sercure Cert";
+    BaseTypes::CryptomaterialHandle cryptoHandle = {0xC4, 0x3B, 0x88, 0xB2, 0x35, 0x81, 0xDD, 0x3B};
 
     appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secAPI) {
         std::cerr << "==> First, a failing example \n";
@@ -47,7 +47,7 @@ int main() {
             BaseTypes::SessionType::INTERNAL,
             true, 
             sessionIdServer, BaseTypes::TransportMechanismType::UNRELIABLE,
-            "Very Secure Certificate");
+            {0xC4, 0x3B, 0x88, 0xB2, 0x35, 0x81, 0xDD, 0x3B});
         std::cerr << "==> Now a working example  - server\n";
         secAPI.AppSecConfigureRequest(
             appId,

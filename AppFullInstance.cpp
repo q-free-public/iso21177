@@ -45,8 +45,8 @@ void AppFullInstance::configureApplication(
         return;
     }
     int port = 2337;
-    BaseTypes::AppId appId = 999;
-    BaseTypes::CryptomaterialHandle cryptoHandle = "Very Sercure Cert";
+    BaseTypes::AppId appId = 623;
+    BaseTypes::CryptomaterialHandle cryptoHandle = {0x1D, 0x1B, 0x90, 0x41, 0x03, 0xAF, 0x03, 0xD2};
     BaseTypes::Socket sock;
     switch (role) {
         case BaseTypes::Role::SERVER: {

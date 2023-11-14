@@ -29,7 +29,7 @@ void SecureSession::SecSessConfigureRequest(
         const BaseTypes::IssuerConstraints &issuerConstraints)
 {
     std::cerr << "SecureSession::SecSessConfigureRequest" << " APP ID " << appId << "\n";
-    std::cerr << "SecureSession will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << cryptomaterialHandle << "\n";
+    std::cerr << "SecureSession will now establish a connection with external ITS-S" << " AID: " << appId << " Cert: " << hex_string(cryptomaterialHandle) << "\n";
     if (data_.size() >= 1) {
         // TODO: For now, only a single session is allowed
         std::cerr << "Reached max allowed sessions: " << data_.size() << "\n";
@@ -40,7 +40,7 @@ void SecureSession::SecSessConfigureRequest(
         key_t key(appId, sessionId);
         if (role == BaseTypes::Role::CLIENT) {
             data.socket.first->connectToServer();
-            data.socket.first->attemptHandshakeAsClient();
+            data.socket.first->attemptHandshakeAsClient(appId, cryptomaterialHandle);
             //attemptHandshake(appId, sessionId);
             data.socket.second = SocketState::BEFORE_HANDSHAKE;
             // TODO: for now we assume that client handshake always works

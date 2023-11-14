@@ -62,7 +62,7 @@ public:
 private:
     enum class SocketState { CREATED, BEFORE_HANDSHAKE, AFTER_HANDSHAKE, OTHER_SIDE_CLOSED, SERVER_SOCKET};
     typedef std::pair<BaseTypes::AppId, BaseTypes::SessionId> key_t;
-    typedef std::pair<std::shared_ptr<Socket>, SocketState> SocketWithState;
+    typedef std::pair<std::shared_ptr<SocketTLS>, SocketState> SocketWithState;
     struct sessionData {
         BaseTypes::Role role;
         SocketWithState socket;
@@ -74,4 +74,6 @@ private:
 
     void attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId);
     void waitForData(SocketWithState sock, BaseTypes::Data& readData);
+    void afterHandshake(const BaseTypes::AppId& appId, 
+            const BaseTypes::SessionId& sessionId, const BaseTypes::Certificate& cert);
 };
