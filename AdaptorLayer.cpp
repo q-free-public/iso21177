@@ -1,4 +1,5 @@
 #include "AdaptorLayer.hh"
+#include "asn1/AdaptorLayerPDU.hh"
 
 #include <iostream>
 
@@ -9,14 +10,18 @@ void AdaptorLayer::AppALDataRequest(
 {
     std::cerr << "AdaptorLayer::AppALDataRequest " << appId <<"\n";
     call_function(appALDataConfirmCB);
-    BaseTypes::SignedData apduToSend(data);
     // Add Session non-repudiation (not supported in current standard)
-    // TODO: add Data header (8.2)
+    // add Data header (8.2)
+    AdaptorLayerPdu alPdu(
+            std::integral_constant<
+                AdaptorLayerPdu::type,
+                AdaptorLayerPdu::type::APDU
+            >(), data);
     if (auto sptr = secSessALAPI.lock()) {
         sptr->ALSessDataRequest(
             appId,
             sessionId,
-            apduToSend
+            alPdu.getEncodedBuffer()
         );
     } else {
         std::cerr << "!!!!!!! unable to lock secSess API !!!\n";
@@ -34,33 +39,21 @@ void AdaptorLayer::ALSessDataIndication(
     const BaseTypes::Data &alpduReceived)
 {
     std::cerr << "AdaptorLayer::ALSessDataIndication" << "\n";
-    enum class ALPDUDataType { ProxyPDU, AccessControlPDU, APDU};
-    // TODO: check type of received data
-    ALPDUDataType PduType = ALPDUDataType::APDU;
-    if (alpduReceived.size() > 0) {
-        if (alpduReceived.data()[0] == 0x00) {
-            PduType = ALPDUDataType::ProxyPDU;
-        }
-        if (alpduReceived.data()[0] == 0x01) {
-            PduType = ALPDUDataType::AccessControlPDU;
-        }
-        if (alpduReceived.data()[0] == 0x02) {
-            PduType = ALPDUDataType::APDU;
-        }
-    }
+    AdaptorLayerPdu alPdu(alpduReceived);
 
-    switch (PduType) {
+    switch (alPdu.getType()) {
         // 1. TLS Handshake proxy PDU - unsupported
-        case ALPDUDataType::ProxyPDU:
+        default:
             std::cerr << "Unsupported PDU type - ProxyPDU\n";
             break;
         // 2. Access Control PDU - TODO: implement
-        case ALPDUDataType::AccessControlPDU:
-            call_function(secALAccessControlIndictationCB, appId, sessionId, alpduReceived);
+        case AdaptorLayerPdu::type::AccessControl:
+            call_function(secALAccessControlIndictationCB, appId, sessionId, alPdu.getPayload());
             break;
         // 3. APDU : Application data
-        case ALPDUDataType::APDU:
-            call_function(appALDataIndicationCB, appId, sessionId, alpduReceived);
+        case AdaptorLayerPdu::type::APDU:
+            call_function(appALDataIndicationCB, appId, sessionId, alPdu.getPayload());
+            break;
     }
 }
 

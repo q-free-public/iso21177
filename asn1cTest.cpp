@@ -1,8 +1,14 @@
 #include "Iso21177AccessControlPdu.h"
 #include "OCTET_STRING.h"
+#include "Asn1Helpers.hh"
 
 #include <vector>
 #include <stdint.h>
+#include <iostream>
+
+#include "BaseTypesGeneral.hh"
+#include "asn1/Ieee1609Dot2DataUnsecured.hh"
+#include "asn1/AdaptorLayerPDU.hh"
 
 typedef Iso21177AccessControlPdu_t asn1_iso21177_t;
 
@@ -15,15 +21,14 @@ void fill_Iso21177AccessControlPdu_t(Iso21177AccessControlPdu_t *pdu)
 int main() {
     std::vector<uint8_t> data_input = {0x01, 0x02};
 
-    Ieee1609Dot2Data_t ieee1609Dot2Data;
-    memset(&ieee1609Dot2Data, 0, sizeof(ieee1609Dot2Data));
+    Ieee1609Dot2DataUnsecured ieee1609Dot2Data(data_input);
+    ieee1609Dot2Data.debugPrint();
+    std::cerr << "encoded Ieee1609Dot2DataUnsecured " << hex_string(ieee1609Dot2Data.getEncodedBuffer()) << "\n\n";
 
-    ieee1609Dot2Data.protocolVersion = 0x03;
-    ieee1609Dot2Data.content = static_cast<struct Ieee1609Dot2Content *>(calloc(1, sizeof(struct Ieee1609Dot2Content)));
-    ieee1609Dot2Data.content->present = Ieee1609Dot2Content_PR_unsecuredData;
-    OCTET_STRING_fromBuf(&ieee1609Dot2Data.content->choice.unsecuredData, reinterpret_cast<char *>(data_input.data()), data_input.size());
-
-    xer_fprint(stdout, &asn_DEF_Ieee1609Dot2Data, &ieee1609Dot2Data);
-
+    std::integral_constant<AdaptorLayerPdu::type, AdaptorLayerPdu::type::APDU> val;
+    AdaptorLayerPdu adaptorLayerPdu(std::integral_constant<AdaptorLayerPdu::type, AdaptorLayerPdu::type::APDU>(), data_input);
+    adaptorLayerPdu.debugPrint();
+    std::cerr << "encoded AdaptorLayerPdu " << hex_string(adaptorLayerPdu.getEncodedBuffer()) << "\n";
+    std::cerr << "Data of AdaptorLayerPdu " << hex_string(adaptorLayerPdu.getPayload()) << "\n";
     return 1;
 }
