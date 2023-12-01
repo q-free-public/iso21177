@@ -91,13 +91,4 @@ void AdaptorLayer::SecALEndSessionRequest(
 void AdaptorLayer::registerSecSessAPI(std::weak_ptr<SecureSessionALAPI> ptr)
 {
     this->secSessALAPI = ptr;
-    if (auto sptr = secSessALAPI.lock()) {
-        sptr->registerALCallbacks(
-            std::bind(&AdaptorLayer::ALSessDataConfirm, this),
-            std::bind(&AdaptorLayer::ALSessDataIndication, this,
-                std::placeholders::_1, std::placeholders::_2,
-                std::placeholders::_3),
-            std::bind(&AdaptorLayer::ALSessEndSessionConfirm, this)
-        );
-    }
 }

@@ -21,7 +21,9 @@ int main() {
     appEx->registerAdaptorLayerAPI(adaptorLayer);
     secSubsystem->registerSecureSessionSecSubAPI(secureSession);
     secSubsystem->registerAdaptorLayerSecSubAPI(adaptorLayer);
+    
     adaptorLayer->registerSecSessAPI(secureSession);
+    secureSession->registerALSecureSessionAPI(adaptorLayer);
 
     std::cerr <<"Init DONE\n";
 

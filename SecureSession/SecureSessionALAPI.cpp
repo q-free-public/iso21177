@@ -1,11 +1,6 @@
 #include "SecureSessionALAPI.hh"
 
-void SecureSessionALAPI::registerALCallbacks(
-    ALSessDataConfirmCB aLSessDataConfirmCB,
-    ALSessDataIndicationCB aLSessDataIndicationCB,
-    ALSessEndSessionConfirmCB aLSessEndSessionConfirmCB)
+void SecureSessionALAPI::registerALSecureSessionAPI(std::weak_ptr<ALSecureSessionAPI> ptr)
 {
-    this->aLSessDataConfirmCB = aLSessDataConfirmCB;
-    this->aLSessDataIndicationCB = aLSessDataIndicationCB;
-    this->aLSessEndSessionConfirmCB = aLSessEndSessionConfirmCB;
+    this->alSecureSessionAPI = ptr;
 }

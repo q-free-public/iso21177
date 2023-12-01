@@ -15,7 +15,9 @@ AppFullInstance::AppFullInstance()
     appEx->registerAdaptorLayerAPI(adaptorLayer);
     secSubsystem->registerSecureSessionSecSubAPI(secureSession);
     secSubsystem->registerAdaptorLayerSecSubAPI(adaptorLayer);
+
     adaptorLayer->registerSecSessAPI(secureSession);
+    secureSession->registerALSecureSessionAPI(adaptorLayer);
 
     std::cerr <<"Init DONE\n";
 }
@@ -30,7 +32,9 @@ AppFullInstance::AppFullInstance(std::shared_ptr<SecureSession> secSession)
     appEx->registerAdaptorLayerAPI(adaptorLayer);
     secSubsystem->registerSecureSessionSecSubAPI(secureSession);
     secSubsystem->registerAdaptorLayerSecSubAPI(adaptorLayer);
+
     adaptorLayer->registerSecSessAPI(secureSession);
+    secureSession->registerALSecureSessionAPI(adaptorLayer);
 
     std::cerr <<"Init DONE\n";
 }

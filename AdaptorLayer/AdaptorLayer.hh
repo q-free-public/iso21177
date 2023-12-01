@@ -9,7 +9,8 @@
 
 class AdaptorLayer 
 : public AdaptorLayerAppAPI
-, public AdaptorLayerSecSubAPI {
+, public AdaptorLayerSecSubAPI
+, public ALSecureSessionAPI {
 public:
     AdaptorLayer() = default;
     

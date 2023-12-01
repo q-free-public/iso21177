@@ -66,7 +66,9 @@ void SecureSessionTLS::ALSessDataRequest(
     const BaseTypes::Data &apduToSend)
 {
     std::cerr << "SecureSessionTLS::ALSessDataRequest" << "\n";
-    call_function(aLSessDataConfirmCB);
+    call_function_wptr(alSecureSessionAPI, [](auto sptr) {
+        sptr->ALSessDataConfirm();
+    });
     //TODO: fragments and cryptographically protects
     // passes to the network for transmission
     key_t key(appId, sessionId);
@@ -121,7 +123,9 @@ void SecureSessionTLS::ALSessEndSessionRequest(const BaseTypes::AppId &appId, co
         break;
     }
     }
-    call_function(aLSessEndSessionConfirmCB);
+    call_function_wptr(alSecureSessionAPI, [](auto sptr) {
+        sptr->ALSessEndSessionConfirm();
+    });
 }
 
 void SecureSessionTLS::SecSessDeactivateRequest(
@@ -158,7 +162,9 @@ void SecureSessionTLS::receiveData(const std::vector<uint8_t> &data)
     // Check if session timed out
     BaseTypes::AppId appId = 10;
     BaseTypes::SessionId sessionId = 11;
-    call_function(aLSessDataIndicationCB, appId, sessionId, data);
+    call_function_wptr(alSecureSessionAPI, [&](auto sptr) {
+        sptr->ALSessDataIndication(appId, sessionId, data);
+    });
 }
 
 void SecureSessionTLS::sessionTerminated()
@@ -188,7 +194,9 @@ void SecureSessionTLS::waitForNetworkInput()
             BaseTypes::Data data;
             waitForData(it->second.socket, data);
             if (data.size() > 0) {
-                call_function(aLSessDataIndicationCB, it->first.first, it->first.second, data);
+                call_function_wptr(alSecureSessionAPI, [&](std::shared_ptr<ALSecureSessionAPI> sptr){
+                    sptr->ALSessDataIndication(it->first.first, it->first.second, data);
+                });
             }
             if (data.size() == 0) {
                 std::cerr << "Socket is closed on the other side\n";
@@ -224,7 +232,9 @@ void SecureSessionTLS::waitForNetworkInput()
             auto sockWithStatePtr = it->second.clientSockets.begin();
             waitForData(*sockWithStatePtr, data);
             if (data.size() > 0) {
-                call_function(aLSessDataIndicationCB, it->first.first, it->first.second, data);
+                call_function_wptr(alSecureSessionAPI, [&](auto sptr) {
+                    sptr->ALSessDataIndication(it->first.first, it->first.second, data);
+                });
             }
             if (data.size() == 0) {
                 std::cerr << "Socket is closed on the other side\n";

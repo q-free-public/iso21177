@@ -8,6 +8,7 @@
 #include <sstream>
 #include <ostream>
 #include <iomanip>
+#include <memory>
 
 namespace BaseTypes {
     // 7.7.1 App-Sec-Configure Request
@@ -51,6 +52,15 @@ void call_function(std::function<void(Args1...)> fn, Args2... args) {
         std::cerr << "function not specified\n";
     } else {
         fn(args...);
+    }
+}
+
+template<class T, class F>
+void call_function_wptr(std::weak_ptr<T> el, F fn) {
+    if (std::shared_ptr<T> sptr = el.lock()) {
+        fn(sptr);
+    } else {
+        throw std::runtime_error("Unable to lock weak pointer");
     }
 }
 
