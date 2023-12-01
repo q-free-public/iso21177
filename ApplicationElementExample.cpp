@@ -1,6 +1,7 @@
 #include "ApplicationElementExample.hh"
 
 #include <iostream>
+#include "asn1/APDU.hh"
 
 ApplicationElementExample::ApplicationElementExample()
 : ApplicationElementI()
@@ -40,10 +41,11 @@ void ApplicationElementExample::AppALDataIndication(
     const BaseTypes::SessionId &sessionId,
     const BaseTypes::Data &data)
 {
-    std::cerr << "ApplicationElementExample::AppALDataIndication\n";
+    std::cerr << "ApplicationElementExample::AppALDataIndication " << hex_string(data) << "\n";
+    Asn1Helpers::APDU apdu(data);
     // TODO: Optional: pre-processing checks (e.2.i p.23)
     if (auto sptr = secSubsystemAppAPI.lock()) {
-        sptr->AppSecIncomingRequest(appId, sessionId, data, true, {});
+        sptr->AppSecIncomingRequest(appId, sessionId, apdu.getPayload(), true, {});
     }
 }
 

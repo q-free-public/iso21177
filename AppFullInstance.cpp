@@ -2,7 +2,8 @@
 
 #include <unistd.h>
 #include "SocketTCP.hh"
-#include "Asn1Helpers.hh"
+
+#include "asn1/Ieee1609Dot2Data.hh"
 
 AppFullInstance::AppFullInstance()
 : secureSession(new SecureSession())
@@ -88,7 +89,7 @@ void AppFullInstance::sendData(BaseTypes::Data &data)
     }
     // Sending without signing
     // TODO: it may be necessary to sign data
-    std::vector<uint8_t> data_encap = Asn1Helpers::Ieee1609Dot2UnsecuredFromBuffer(data);
+    std::vector<uint8_t> data_encap = Asn1Helpers::Ieee1609Dot2Data(std::integral_constant<Asn1Helpers::Ieee1609Dot2Data::type, Asn1Helpers::Ieee1609Dot2Data::type::UnsecuredData>(), data).getEncodedBuffer();
     appEx->executeWithALAPI([&](AdaptorLayerAppAPI& alAppAPI){
         alAppAPI.AppALDataRequest(
             this->data_->appId,

@@ -12,10 +12,10 @@ void AdaptorLayer::AppALDataRequest(
     call_function(appALDataConfirmCB);
     // Add Session non-repudiation (not supported in current standard)
     // add Data header (8.2)
-    AdaptorLayerPdu alPdu(
+    Asn1Helpers::AdaptorLayerPdu alPdu(
             std::integral_constant<
-                AdaptorLayerPdu::type,
-                AdaptorLayerPdu::type::APDU
+                Asn1Helpers::AdaptorLayerPdu::type,
+                Asn1Helpers::AdaptorLayerPdu::type::APDU
             >(), data);
     if (auto sptr = secSessALAPI.lock()) {
         sptr->ALSessDataRequest(
@@ -39,7 +39,7 @@ void AdaptorLayer::ALSessDataIndication(
     const BaseTypes::Data &alpduReceived)
 {
     std::cerr << "AdaptorLayer::ALSessDataIndication" << "\n";
-    AdaptorLayerPdu alPdu(alpduReceived);
+    Asn1Helpers::AdaptorLayerPdu alPdu(alpduReceived);
 
     switch (alPdu.getType()) {
         // 1. TLS Handshake proxy PDU - unsupported
@@ -47,11 +47,11 @@ void AdaptorLayer::ALSessDataIndication(
             std::cerr << "Unsupported PDU type - ProxyPDU\n";
             break;
         // 2. Access Control PDU - TODO: implement
-        case AdaptorLayerPdu::type::AccessControl:
+        case Asn1Helpers::AdaptorLayerPdu::type::AccessControl:
             call_function(secALAccessControlIndictationCB, appId, sessionId, alPdu.getPayload());
             break;
         // 3. APDU : Application data
-        case AdaptorLayerPdu::type::APDU:
+        case Asn1Helpers::AdaptorLayerPdu::type::APDU:
             call_function(appALDataIndicationCB, appId, sessionId, alPdu.getPayload());
             break;
     }

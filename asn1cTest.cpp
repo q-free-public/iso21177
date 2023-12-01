@@ -1,22 +1,13 @@
 #include "Iso21177AccessControlPdu.h"
 #include "OCTET_STRING.h"
-#include "Asn1Helpers.hh"
 
 #include <vector>
 #include <stdint.h>
 #include <iostream>
 
 #include "BaseTypesGeneral.hh"
-#include "asn1/Ieee1609Dot2DataUnsecured.hh"
+#include "asn1/Ieee1609Dot2Data.hh"
 #include "asn1/AdaptorLayerPDU.hh"
-
-typedef Iso21177AccessControlPdu_t asn1_iso21177_t;
-
-void fill_Iso21177AccessControlPdu_t(Iso21177AccessControlPdu_t *pdu)
-{
-    memset(pdu, 0, sizeof(Iso21177AccessControlPdu_t));
-    pdu->messageId = 1;
-}
 
 int main() {
     const std::vector<std::pair<std::vector<uint8_t>, std::vector<uint8_t>>> test_input = {
@@ -51,7 +42,7 @@ int main() {
         const std::vector<uint8_t>& input = test_elem.first;
         const std::vector<uint8_t>& expected_payload = test_elem.second;
 
-        AdaptorLayerPdu adaptorLayerPdu(input);
+        Asn1Helpers::AdaptorLayerPdu adaptorLayerPdu(input);
         const std::vector<uint8_t> encoded = adaptorLayerPdu.getEncodedBuffer();
         const std::vector<uint8_t> payload = adaptorLayerPdu.getPayload();
         std::cerr << "input      AdaptorLayerPdu " << hex_string(input) << "\n";

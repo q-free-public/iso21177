@@ -88,7 +88,7 @@ void SecureSession::ALSessDataRequest(
         return;
     }
     int sent = sock_ptr->sendData(apduToSend);
-    std::cerr << "SecureSession::ALSessDataRequest : sent " << sent << " data size: " << apduToSend.size() << "\n";
+    std::cerr << "SecureSession::ALSessDataRequest : sent " << sent << " data size: " << apduToSend.size() <<  hex_string(apduToSend) << "\n";
 }
 
 void SecureSession::ALSessEndSessionRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)

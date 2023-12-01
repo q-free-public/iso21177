@@ -6,6 +6,9 @@
 #include "Iso21177AdaptorLayerPdu.h"
 #include "asn1c_template_wrapper.hh"
 
+
+namespace Asn1Helpers {
+
 class AdaptorLayerPdu : public 
         asn1c_wrapper<Iso21177AdaptorLayerPdu_t> {
 public:
@@ -19,3 +22,5 @@ public:
 private:
 
 };
+
+} // namespace Asn1Helpers

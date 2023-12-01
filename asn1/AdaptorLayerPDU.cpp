@@ -1,5 +1,7 @@
 #include "AdaptorLayerPDU.hh"
 
+namespace Asn1Helpers {
+
 AdaptorLayerPdu::AdaptorLayerPdu(std::integral_constant<type, type::APDU> i, const std::vector<uint8_t> &data)
 : asn1c_wrapper(&asn_DEF_Iso21177AdaptorLayerPdu)
 {
@@ -36,8 +38,13 @@ const std::vector<uint8_t> AdaptorLayerPdu::getPayload() const
     switch (getType()) {
     case type::APDU:
     {
-        OCTET_STRING_t *payload = &data_->value.choice.Apdu;
-        ret.assign(payload->buf, payload->buf + payload->size);
+        std::array<uint8_t, 65535> buffer;
+        asn_enc_rval_t rval = oer_encode_to_buffer(&asn_DEF_Apdu, nullptr,
+            &data_->value.choice.Apdu, buffer.data(), buffer.size());
+        if (rval.encoded < 0) {
+            return ret;
+        }
+        ret.assign(buffer.begin(), buffer.begin() + rval.encoded);
         break;
     }
     case type::AccessControl: 
@@ -58,3 +65,5 @@ const std::vector<uint8_t> AdaptorLayerPdu::getPayload() const
     return ret;
 
 }
+
+} // namespace Asn1Helpers

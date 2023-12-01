@@ -3,6 +3,9 @@
 #include <array>
 #include <memory>
 #include <stdexcept>
+#include <vector>
+
+#include "../BaseTypesGeneral.hh"
 
 template <class T>
 class asn1c_wrapper {
@@ -24,7 +27,8 @@ public:
         asn_dec_rval_t rval = oer_decode(0, asn1c_def_, (void**)&el_, data.data(), data.size());
         data_ = std::unique_ptr<T>(el_);
         if (rval.consumed != data.size()) {
-            throw std::runtime_error("Mismatch in consumed data: " + std::to_string(rval.consumed) + " " + std::to_string(data.size()));
+            throw std::runtime_error("ASN.1: Mismatch in consumed data: " + std::to_string(rval.consumed) + " expected " + std::to_string(data.size()) + 
+                "\n" + hex_string(data));
         }
     }
     ~asn1c_wrapper() {
