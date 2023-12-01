@@ -4,12 +4,12 @@
 #include <mutex>
 
 #include "ApplicationElementExample.hh"
-#include "SecuritySubsystemAppAPI.hh"
-#include "SecureSession.hh"
-#include "SecuritySubsystem.hh"
-#include "AdaptorLayer.hh"
-
 #include "AppFullInstance.hh"
+
+#include "AdaptorLayer/AdaptorLayer.hh"
+#include "SecureSession/SecureSession.hh"
+#include "SecuritySubsystem/SecuritySubsystem.hh"
+#include "SecuritySubsystem/SecuritySubsystemAppAPI.hh"
 
 // Synchronisation to inform client that the server is ready;
 std::condition_variable cond_var;

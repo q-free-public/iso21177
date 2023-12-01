@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "Socket.hh"
+#include "Sockets/Socket.hh"
 
 extern "C" {
     #include <openssl/ssl.h>

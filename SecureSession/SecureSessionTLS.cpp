@@ -8,8 +8,8 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include "SocketServerTLS.hh"
-#include "SocketClientTLS.hh"
+#include "Sockets/SocketServerTLS.hh"
+#include "Sockets/SocketClientTLS.hh"
 
 SecureSessionTLS::SecureSessionTLS()
 {

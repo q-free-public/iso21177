@@ -15,6 +15,7 @@ public:
     enum class type {NOTHING, UnsecuredData, SignedData, EncryptedData, SignedCertificateRequest, SignedX509CertificateRequest};
     Ieee1609Dot2Data(std::integral_constant<type, type::UnsecuredData> i, const std::vector<uint8_t>& data);
     Ieee1609Dot2Data(const std::vector<uint8_t>& data);
+    type getType() const;
 };
 
 } // namespace Asn1Helpers

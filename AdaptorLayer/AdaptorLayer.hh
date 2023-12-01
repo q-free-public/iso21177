@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "AdaptorLayerAppAPI.hh"
-#include "SecureSessionALAPI.hh"
+#include "SecureSession/SecureSessionALAPI.hh"
 #include "AdaptorLayerSecSubAPI.hh"
 
 

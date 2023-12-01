@@ -5,6 +5,8 @@
 #include <functional>
 
 #include "SecuritySubsystemAppAPI.hh"
+#include "asn1/Ieee1609Dot2Data.hh"
+#include "sec_ent_comm/sec_ent_api.hh"
 
 SecuritySubsystem::SecuritySubsystem()
 {
@@ -142,14 +144,24 @@ void SecuritySubsystem::AppSecIncomingRequest(
     if (!isIeee1609Dot2Data) {
         // Not supported now
         result = Result::INVALID_APDU_AS_PER_ACCESS_CONTROL_POLICY_NO_REQUEST_SENT;
-    } else{
-        if (dataIsSignedType) {
-            // TODO: verify with sec_ent - if failed, set result
-        } else {
-            // TODO: type unsigned is okay, but other (e.g. encrypted) are not
-            bool dataIsUnsignedType = true;
-            if (!dataIsUnsignedType) {
+    } else {
+        Asn1Helpers::Ieee1609Dot2Data ieeeDot2Data(apdu);
+        switch (ieeeDot2Data.getType()) {
+            case Asn1Helpers::Ieee1609Dot2Data::type::SignedData: {
+                SecEnt::VerificationStatus status = SecEnt::verifyIeee1609Dot2DataSigned(ieeeDot2Data);
+                if (status != SecEnt::VerificationStatus::VerificationOK) {
+                    result = Result::INVALID_SIGNED_IEEE1609DOT2_DATA;
+                    call_function(appSecIncomingConfirmCB, result);
+                    return;
+                }
+                break;
+            };
+            case Asn1Helpers::Ieee1609Dot2Data::type::UnsecuredData: {
+                break;
+            }
+            default: {
                 result = Result::INVALID_IEEE1609DOT2DATA_TYPE;
+                break;
             }
         }
     }

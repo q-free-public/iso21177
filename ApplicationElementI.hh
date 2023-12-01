@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "SecuritySubsystemAppAPI.hh"
-#include "AdaptorLayerAppAPI.hh"
+#include "AdaptorLayer/AdaptorLayerAppAPI.hh"
+#include "SecuritySubsystem/SecuritySubsystemAppAPI.hh"
 
 class ApplicationElementI {
 public:

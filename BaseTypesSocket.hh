@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "Socket.hh"
+#include "Sockets/Socket.hh"
 
 namespace BaseTypes {
     typedef std::shared_ptr<Socket> Socket;

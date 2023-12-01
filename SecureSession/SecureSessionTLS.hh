@@ -7,7 +7,7 @@
 #include "SecureSessionALAPI.hh"
 #include "SecureSession.hh"
 
-#include "SocketTLS.hh"
+#include "Sockets/SocketTLS.hh"
 
 class SecureSessionTLS : 
         public SecureSession {

@@ -5,11 +5,11 @@
 #include <netinet/in.h>
 
 #include "ApplicationElementExample.hh"
-#include "SecuritySubsystemAppAPI.hh"
-#include "SecureSession.hh"
-#include "SecuritySubsystem.hh"
-#include "AdaptorLayer.hh"
-#include "SocketTCP.hh"
+#include "SecureSession/SecureSession.hh"
+#include "SecuritySubsystem/SecuritySubsystemAppAPI.hh"
+#include "SecuritySubsystem/SecuritySubsystem.hh"
+#include "AdaptorLayer/AdaptorLayer.hh"
+#include "Sockets/SocketTCP.hh"
 
 int main() {
     std::shared_ptr<SecureSession> secureSession(new SecureSession());

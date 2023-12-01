@@ -2,9 +2,9 @@
 
 #include <memory>
 
-#include "SecureSession.hh"
-#include "SecuritySubsystem.hh"
-#include "AdaptorLayer.hh"
+#include "SecureSession/SecureSession.hh"
+#include "SecuritySubsystem/SecuritySubsystem.hh"
+#include "AdaptorLayer/AdaptorLayer.hh"
 #include "ApplicationElementExample.hh"
 
 class AppFullInstance {

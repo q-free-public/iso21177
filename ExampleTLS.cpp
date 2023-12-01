@@ -4,11 +4,11 @@
 #include <mutex>
 
 #include "ApplicationElementExample.hh"
-#include "SecuritySubsystemAppAPI.hh"
-#include "SecureSession.hh"
-#include "SecureSessionTLS.hh"
-#include "SecuritySubsystem.hh"
-#include "AdaptorLayer.hh"
+#include "SecureSession/SecureSession.hh"
+#include "SecureSession/SecureSessionTLS.hh"
+#include "SecuritySubsystem/SecuritySubsystem.hh"
+#include "SecuritySubsystem/SecuritySubsystemAppAPI.hh"
+#include "AdaptorLayer/AdaptorLayer.hh"
 
 #include "AppFullInstance.hh"
 

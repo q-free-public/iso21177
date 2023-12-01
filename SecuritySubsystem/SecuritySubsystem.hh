@@ -3,9 +3,9 @@
 #include <memory>
 
 #include "SecuritySubsystemAppAPI.hh"
-#include "AdaptorLayerSecSubAPI.hh"
-#include "SecureSessionSecSubAPI.hh"
-#include "SecuritySusystemInternalInterface.hh"
+#include "AdaptorLayer/AdaptorLayerSecSubAPI.hh"
+#include "SecureSession/SecureSessionSecSubAPI.hh"
+#include "SecuritySubsystemInternalInterface.hh"
 
 class SecuritySubsystem 
 : public SecuritySubsystemAppAPI
