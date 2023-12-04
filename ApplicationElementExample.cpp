@@ -9,7 +9,7 @@ ApplicationElementExample::ApplicationElementExample()
     std::cerr << "ApplicationElementExample constructed\n";
 }
 
-void ApplicationElementExample::AppSecureConfigureConfirm(
+void ApplicationElementExample::AppSecConfigureConfirm(
     SecuritySubsystemAppAPI::AppSecConfigureConfirmResult ret)
 {
     std::cerr << " ApplicationElementExample::AppSecureConfigureConfirm " 
@@ -17,7 +17,7 @@ void ApplicationElementExample::AppSecureConfigureConfirm(
 }
 
 void ApplicationElementExample::AppSecStartSessionIndictation(
-    BaseTypes::AppId appId, BaseTypes::SessionId sessionId)
+    const BaseTypes::AppId& appId, const BaseTypes::SessionId& sessionId)
 {
     std::cerr << " ApplicationElementExample::AppSecStartSessionIndictation " 
         << appId << " " << sessionId << "\n";

@@ -1,9 +1,6 @@
 #include "AdaptorLayerAppAPI.hh"
 
-void AdaptorLayerAppAPI::registerAppCallbacks(
-    AppALDataConfirmCB appALDataConfirmCB,
-    AppALDataIndicationCB appALDataIndicationCB
-) {
-    this->appALDataConfirmCB = appALDataConfirmCB;
-    this->appALDataIndicationCB = appALDataIndicationCB;
+void AdaptorLayerAppAPI::registerAppAPI(std::weak_ptr<AppAdaptorLayerAPI> ptr)
+{
+    this->appALAPI = ptr;
 }

@@ -5,17 +5,17 @@
 #include "AdaptorLayer/AdaptorLayerAppAPI.hh"
 #include "SecuritySubsystem/SecuritySubsystemAppAPI.hh"
 
-class ApplicationElementI {
+class ApplicationElementI 
+: public AppAdaptorLayerAPI
+, public AppSecuritySubsystemAPI {
 public:
     ApplicationElementI();
 
-    virtual void AppSecureConfigureConfirm(
-        SecuritySubsystemAppAPI::AppSecConfigureConfirmResult
-    ) = 0;
+    virtual void AppSecConfigureConfirm(SecuritySubsystemAppAPI::AppSecConfigureConfirmResult) = 0;
 
     virtual void AppSecStartSessionIndictation(
-        BaseTypes::AppId,
-        BaseTypes::SessionId
+        const BaseTypes::AppId&,
+        const BaseTypes::SessionId&
     ) = 0;
 
     virtual void AppSecDataConfirm(

@@ -5,6 +5,15 @@
 
 #include "BaseTypes.hh"
 
+class AppAdaptorLayerAPI {
+public:
+    virtual void AppALDataConfirm() = 0;
+    virtual void AppALDataIndication(
+            const BaseTypes::AppId&,
+            const BaseTypes::SessionId&,
+            const BaseTypes::Data&
+        ) = 0;
+};
 
 class AdaptorLayerAppAPI {
 public:
@@ -14,24 +23,7 @@ public:
         const BaseTypes::Data& data
     ) = 0;
 
-    typedef std::function<void()>
-            AppALDataConfirmCB;
-    
-
-    typedef std::function<
-        void(
-            const BaseTypes::AppId&,
-            const BaseTypes::SessionId&,
-            const BaseTypes::Data&
-        )
-    > AppALDataIndicationCB;
-
-    virtual void registerAppCallbacks(
-        AppALDataConfirmCB,
-        AppALDataIndicationCB
-    );
-
+    virtual void registerAppAPI(std::weak_ptr<AppAdaptorLayerAPI> ptr);
 protected:
-    AppALDataConfirmCB appALDataConfirmCB;
-    AppALDataIndicationCB appALDataIndicationCB;
+    std::weak_ptr<AppAdaptorLayerAPI> appALAPI;
 };

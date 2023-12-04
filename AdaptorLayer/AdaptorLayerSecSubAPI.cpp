@@ -2,13 +2,7 @@
 
 #include <iostream>
 
-void AdaptorLayerSecSubAPI::registerAppCallBacks(
-    SecALAccessControlConfirmCB secALAccessControlConfirmCB,
-    SecALAccessControlIndictationCB secALAccessControlIndictationCB,
-    SecALEndSessionConfirmCB secALEndSessionConfirmCB)
+void AdaptorLayerSecSubAPI::registerSecSubALAPI(std::weak_ptr<SecSubAdaptorLayerAPI> ptr)
 {
-    this->secALAccessControlConfirmCB = secALAccessControlConfirmCB;
-    this->secALAccessControlIndictationCB = secALAccessControlIndictationCB;
-    this->secALEndSessionConfirmCB = secALEndSessionConfirmCB;
-    std::cerr << "AdaptorLayerSecSubAPI::registerAppCallBacks\n";
+    this->secSubALAPI = ptr;
 }

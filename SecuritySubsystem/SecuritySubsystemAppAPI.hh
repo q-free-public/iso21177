@@ -4,6 +4,7 @@
 
 #include "BaseTypes.hh"
 
+class AppSecuritySubsystemAPI;
 
 class SecuritySubsystemAppAPI {
 public:
@@ -40,18 +41,6 @@ public:
         const BaseTypes::CryptomaterialHandle& cryptomaterialHandle
     ) = 0;
 
-    typedef std::function<void(AppSecConfigureConfirmResult)>
-            AppSecConfigureConfirmCB;
-
-
-    typedef std::function<
-        void(
-            const BaseTypes::AppId&,
-            const BaseTypes::SessionId&
-        )
-    > AppSecStartSessionIndictationCB;
-
-
     virtual void AppSecDataRequest(
         const BaseTypes::AppId& appId,
         const BaseTypes::SessionId& sessionId,
@@ -59,13 +48,6 @@ public:
         const BaseTypes::Data& data,
         const BaseTypes::SigningParameters& signingParams
     ) = 0;
-    typedef std::function<
-        void(
-            AppSecDataConfirmResult,
-            const BaseTypes::SignedData&
-        )
-    > AppSecDataConfirmCB;
-
 
     virtual void AppSecIncomingRequest(
         const BaseTypes::AppId& appId,
@@ -74,58 +56,52 @@ public:
         bool isIeee1609Dot2Data,
         const BaseTypes::SignedDataVerificationParams& signVerParams
     ) = 0;
-    typedef std::function<
-        void(
-            AppSecIncomingConfirmResult
-        )
-    > AppSecIncomingConfirmCB;
 
     virtual void AppSecEndSessionRequest(
         const BaseTypes::AppId& appId,
         const BaseTypes::SessionId& sessionId
     ) = 0;
-    typedef std::function<
-        void(
-            const BaseTypes::AppId&,
-            const BaseTypes::SessionId&,
-            BaseTypes::EnumeratedSecLayer
-        )
-    > AppSecEndSessionIndicationCB;
 
     virtual void AppSecDeactivateRequest(
         const BaseTypes::AppId& appId,
         const BaseTypes::SecureSessionInstanceId& secureSessionId
     ) = 0;
-    typedef std::function<void()
-    > AppSecDeactivateConfirmCB;
 
-    typedef std::function<
-        void(
-            const BaseTypes::AppId& appId,
+    void registerAppSecuritySubsystemAPI(std::weak_ptr<AppSecuritySubsystemAPI> ptr);
+
+protected:
+    std::weak_ptr<AppSecuritySubsystemAPI> appSecuritySubsystemAPI;
+};
+
+class AppSecuritySubsystemAPI {
+public:
+
+    virtual void AppSecConfigureConfirm(SecuritySubsystemAppAPI::AppSecConfigureConfirmResult) = 0;
+
+    virtual void AppSecStartSessionIndictation(
+            const BaseTypes::AppId&,
+            const BaseTypes::SessionId&
+        ) = 0;
+
+    virtual 
+    void AppSecDataConfirm(
+        SecuritySubsystemAppAPI::AppSecDataConfirmResult,
+        const BaseTypes::SignedData&
+    ) = 0;
+
+    virtual void AppSecIncomingConfirm(
+            SecuritySubsystemAppAPI::AppSecIncomingConfirmResult
+        ) = 0;
+
+    virtual void AppSecDeactivateConfirm() = 0;
+
+    virtual void AppSecDeactivateIndication(const BaseTypes::AppId& appId,
             const BaseTypes::SecureSessionInstanceId& secureSessionId
-        )
-    > AppSecDeactivateIndicationCB;
+        ) = 0;
 
-    virtual void registerAppCallbacks(
-        AppSecConfigureConfirmCB,
-        AppSecStartSessionIndictationCB,
-        AppSecDataConfirmCB,
-        AppSecIncomingConfirmCB,
-        AppSecEndSessionIndicationCB,
-        AppSecDeactivateConfirmCB,
-        AppSecDeactivateIndicationCB
-    );
-
-protected:
-    AppSecConfigureConfirmCB& getAppSecConfigureConfirmCB();
-    AppSecStartSessionIndictationCB& getAppSecStartSessionIndictationCB();
-
-protected:
-    AppSecConfigureConfirmCB appSecConfigureConfirmCB;
-    AppSecStartSessionIndictationCB appSecStartSessionIndicatorCB;
-    AppSecDataConfirmCB appSecDataConfirmCB;
-    AppSecIncomingConfirmCB appSecIncomingConfirmCB;
-    AppSecEndSessionIndicationCB appSecEndSessionIndicationCB;
-    AppSecDeactivateConfirmCB appSecDeactivateConfirmCB;
-    AppSecDeactivateIndicationCB appSecDeactivateIndicationCB;
+    virtual void AppSecEndSessionIndication(
+            const BaseTypes::AppId&,
+            const BaseTypes::SessionId&,
+            BaseTypes::EnumeratedSecLayer
+        ) = 0;
 };

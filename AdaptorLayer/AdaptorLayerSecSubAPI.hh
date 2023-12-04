@@ -4,6 +4,17 @@
 
 #include "BaseTypes.hh"
 
+class SecSubAdaptorLayerAPI {
+public:
+    virtual void SecALAccessControlConfirm() = 0;
+    virtual void SecALAccessControlIndictation(
+        const BaseTypes::AppId& appId,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::Data& data
+    ) = 0;
+    virtual void SecALEndSessionConfirm() = 0;
+};
+
 class AdaptorLayerSecSubAPI {
 public:
     
@@ -12,33 +23,14 @@ public:
         const BaseTypes::SessionId& sessionId,
         const BaseTypes::Data& data
     ) = 0;
-    typedef std::function<
-        void()
-    > SecALAccessControlConfirmCB;
-    typedef std::function<
-        void(
-            const BaseTypes::AppId& appId,
-            const BaseTypes::SessionId& sessionId,
-            const BaseTypes::Data& data
-        )
-    > SecALAccessControlIndictationCB;
 
     virtual void SecALEndSessionRequest(
         const BaseTypes::AppId& appId,
         const BaseTypes::SessionId& sessionId
     ) = 0;
-    typedef std::function<
-        void()
-    > SecALEndSessionConfirmCB;
 
-    virtual void registerAppCallBacks(
-        SecALAccessControlConfirmCB secALAccessControlConfirmCB,
-        SecALAccessControlIndictationCB secALAccessControlIndictationCB,
-        SecALEndSessionConfirmCB secALEndSessionConfirmCB
-    );
+    virtual void registerSecSubALAPI(std::weak_ptr<SecSubAdaptorLayerAPI> ptr);
 
 protected:
-    SecALAccessControlConfirmCB secALAccessControlConfirmCB;
-    SecALAccessControlIndictationCB secALAccessControlIndictationCB;
-    SecALEndSessionConfirmCB secALEndSessionConfirmCB;
+    std::weak_ptr<SecSubAdaptorLayerAPI> secSubALAPI;
 };

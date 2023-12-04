@@ -12,9 +12,16 @@ AppFullInstance::AppFullInstance()
 , appEx(new ApplicationElementExample())
 {
     appEx->registerSecuritySubsystemAPI(secSubsystem);
+    secSubsystem->registerAppSecuritySubsystemAPI(appEx);
+
     appEx->registerAdaptorLayerAPI(adaptorLayer);
+    adaptorLayer->registerAppAPI(appEx);
+
     secSubsystem->registerSecureSessionSecSubAPI(secureSession);
+    secureSession->registerSecSubSecureSessionAPI(secSubsystem);
+
     secSubsystem->registerAdaptorLayerSecSubAPI(adaptorLayer);
+    adaptorLayer->registerSecSubALAPI(secSubsystem);
 
     adaptorLayer->registerSecSessAPI(secureSession);
     secureSession->registerALSecureSessionAPI(adaptorLayer);
@@ -29,9 +36,16 @@ AppFullInstance::AppFullInstance(std::shared_ptr<SecureSession> secSession)
 , appEx(new ApplicationElementExample())
 {
     appEx->registerSecuritySubsystemAPI(secSubsystem);
+    secSubsystem->registerAppSecuritySubsystemAPI(appEx);
+
     appEx->registerAdaptorLayerAPI(adaptorLayer);
+    adaptorLayer->registerAppAPI(appEx);
+
     secSubsystem->registerSecureSessionSecSubAPI(secureSession);
+    secureSession->registerSecSubSecureSessionAPI(secSubsystem);
+
     secSubsystem->registerAdaptorLayerSecSubAPI(adaptorLayer);
+    adaptorLayer->registerSecSubALAPI(secSubsystem);
 
     adaptorLayer->registerSecSessAPI(secureSession);
     secureSession->registerALSecureSessionAPI(adaptorLayer);

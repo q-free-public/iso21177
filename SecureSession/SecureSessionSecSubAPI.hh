@@ -4,6 +4,25 @@
 
 #include "BaseTypes.hh"
 
+class SecSubSecureSessionAPI {
+public:
+    virtual void SecSessConfigureConfirm() = 0;
+
+    virtual void SecSessionStartIndication(
+                const BaseTypes::AppId&,
+                const BaseTypes::SessionId&,
+                const BaseTypes::Certificate&
+        ) = 0;
+
+    virtual void SecSessEndSessionIndication(
+        const BaseTypes::AppId& appid,
+        const BaseTypes::SessionId& sessionId
+    ) = 0;
+
+    virtual void SecSessDeactivateConfirm() = 0;
+
+};
+
 class SecureSessionSecSubAPI {
 public:
     virtual void SecSessConfigureRequest(
@@ -27,38 +46,13 @@ public:
         const BaseTypes::IssuerConstraints& issuerConstraints
     ) = 0;
 
-    typedef std::function<void()>
-            SecSessConfigureConfirmCB;
-
-    typedef std::function<void(
-                const BaseTypes::AppId&,
-                const BaseTypes::SessionId&,
-                const BaseTypes::Certificate&
-        )
-    > SecSessionStartIndicationCB;
-
-    typedef std::function<void(
-        const BaseTypes::AppId& appid,
-        const BaseTypes::SessionId& sessionId
-    )> SecSessEndSessionIndicationCB;
-
     virtual void SecSessDeactivateRequest(
         const BaseTypes::AppId& appId,
         const BaseTypes::SecureSessionInstanceId& secSessInstanceId
     ) = 0;
 
-    typedef std::function<void(
-    )> SecSessDeactivateConfirmCB;
+    virtual void registerSecSubSecureSessionAPI(std::weak_ptr<SecSubSecureSessionAPI> ptr);
 
-    virtual void registerSecSubCallbacks(
-        SecSessConfigureConfirmCB secSessConfigureConfirmCB,
-        SecSessionStartIndicationCB secSessionStartIndicationCB,
-        SecSessEndSessionIndicationCB secSessEndSessionIndicationCB,
-        SecSessDeactivateConfirmCB secSessDeactivateConfirmCB
-    );
 protected:
-    SecSessConfigureConfirmCB secSessConfigureConfirmCB;
-    SecSessionStartIndicationCB secSessionStartIndicationCB;
-    SecSessEndSessionIndicationCB secSessEndSessionIndicationCB;
-    SecSessDeactivateConfirmCB secSessDeactivateConfirmCB;
+    std::weak_ptr<SecSubSecureSessionAPI> secSubSecureSessionAPI;
 };

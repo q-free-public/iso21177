@@ -2,31 +2,8 @@
 
 #include <iostream>
 
-void SecuritySubsystemAppAPI::registerAppCallbacks(
-        AppSecConfigureConfirmCB appSecConfigCB,
-        AppSecStartSessionIndictationCB appSecStartSessionCB,
-        AppSecDataConfirmCB appSecDataConfirmCB,
-        AppSecIncomingConfirmCB appSecIncomingConfirmCB,
-        AppSecEndSessionIndicationCB appSecEndSessionIndicationCB,
-        AppSecDeactivateConfirmCB appSecDeactivateConfirmCB,
-        AppSecDeactivateIndicationCB appSecDeactivateIndicationCB)
+void SecuritySubsystemAppAPI::registerAppSecuritySubsystemAPI(std::weak_ptr<AppSecuritySubsystemAPI> ptr)
 {
-    this->appSecConfigureConfirmCB = appSecConfigCB;
-    this->appSecStartSessionIndicatorCB = appSecStartSessionCB;
-    this->appSecDataConfirmCB = appSecDataConfirmCB;
-    this->appSecIncomingConfirmCB = appSecIncomingConfirmCB;
-    this->appSecEndSessionIndicationCB = appSecEndSessionIndicationCB;
-    this->appSecDeactivateConfirmCB = appSecDeactivateConfirmCB;
-    this->appSecDeactivateIndicationCB = appSecDeactivateIndicationCB;
-    std::cerr << "Callbacks registered\n";
+    this->appSecuritySubsystemAPI = ptr;
 }
 
-SecuritySubsystemAppAPI::AppSecConfigureConfirmCB &SecuritySubsystemAppAPI::getAppSecConfigureConfirmCB()
-{
-    return appSecConfigureConfirmCB;
-}
-
-SecuritySubsystemAppAPI::AppSecStartSessionIndictationCB &SecuritySubsystemAppAPI::getAppSecStartSessionIndictationCB()
-{
-    return appSecStartSessionIndicatorCB;
-}

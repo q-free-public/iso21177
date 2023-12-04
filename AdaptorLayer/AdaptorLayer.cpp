@@ -9,7 +9,9 @@ void AdaptorLayer::AppALDataRequest(
     const BaseTypes::Data &data)
 {
     std::cerr << "AdaptorLayer::AppALDataRequest " << appId <<"\n";
-    call_function(appALDataConfirmCB);
+    call_function_wptr(appALAPI, [](auto sptr) {
+        sptr->AppALDataConfirm();
+    });
     // Add Session non-repudiation (not supported in current standard)
     // add Data header (8.2)
     Asn1Helpers::AdaptorLayerPdu alPdu(
@@ -48,11 +50,15 @@ void AdaptorLayer::ALSessDataIndication(
             break;
         // 2. Access Control PDU - TODO: implement
         case Asn1Helpers::AdaptorLayerPdu::type::AccessControl:
-            call_function(secALAccessControlIndictationCB, appId, sessionId, alPdu.getPayload());
+            call_function_wptr(secSubALAPI, [&](auto sptr) {
+                sptr->SecALAccessControlIndictation(appId, sessionId, alPdu.getPayload());
+            });
             break;
         // 3. APDU : Application data
         case Asn1Helpers::AdaptorLayerPdu::type::APDU:
-            call_function(appALDataIndicationCB, appId, sessionId, alPdu.getPayload());
+            call_function_wptr(appALAPI, [&](auto sptr) {
+                sptr->AppALDataIndication(appId, sessionId, alPdu.getPayload());
+            });
             break;
     }
 }
@@ -68,7 +74,9 @@ void AdaptorLayer::SecALAccessControlRequest(
     const BaseTypes::Data& data)
 {
     std::cerr << "AdaptorLayer::SecALAccessControlRequest\n";
-    call_function(secALAccessControlConfirmCB);
+    call_function_wptr(secSubALAPI, [](auto sptr) {
+        sptr->SecALAccessControlConfirm();
+    });
     // TODO: create ALPDU Iso21177AdaptorLayerPDUA
     BaseTypes::Data alpdu(data);
     if (auto sptr = secSessALAPI.lock()) {
@@ -82,7 +90,9 @@ void AdaptorLayer::SecALEndSessionRequest(
 {
     //XXX: This has an issue - in some cases it should not call SecSession, but it has no way of knowing
     std::cerr << "AdaptorLayer::SecALEndSessionRequest\n";
-    call_function(secALEndSessionConfirmCB);
+    call_function_wptr(secSubALAPI, [](auto sptr){
+        sptr->SecALEndSessionConfirm();
+    });
     if (auto sptr = secSessALAPI.lock()) {
         sptr->ALSessEndSessionRequest(appId, sessionId);
     }

@@ -9,14 +9,16 @@
 
 class SecuritySubsystem 
 : public SecuritySubsystemAppAPI
-, public SecuritySubsystemInternalInterface {
+, public SecuritySubsystemInternalInterface
+, public SecSubSecureSessionAPI
+, public SecSubAdaptorLayerAPI {
 public:
     SecuritySubsystem();
     void registerAdaptorLayerSecSubAPI(std::weak_ptr<AdaptorLayerSecSubAPI> );
     void registerSecureSessionSecSubAPI(std::weak_ptr<SecureSessionSecSubAPI>);
 
     virtual void SecSessConfigureConfirm();
-    virtual void SecSessStartIndication(
+    virtual void SecSessionStartIndication(
         const BaseTypes::AppId&,
         const BaseTypes::SessionId&,
         const BaseTypes::Certificate&

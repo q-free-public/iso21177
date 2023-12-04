@@ -16,31 +16,12 @@ void SecuritySubsystem::registerAdaptorLayerSecSubAPI(
         std::weak_ptr<AdaptorLayerSecSubAPI> aLSecSubAPI)
 {
     alAPI = aLSecSubAPI;
-    if (auto sptr = alAPI.lock()) {
-        sptr->registerAppCallBacks(
-            std::bind(&SecuritySubsystem::SecALAccessControlConfirm, this),
-            std::bind(&SecuritySubsystem::SecALAccessControlIndictation, this,
-                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-            std::bind(&SecuritySubsystem::SecALEndSessionConfirm, this)
-        );
-    }
 }
 
 void SecuritySubsystem::registerSecureSessionSecSubAPI(
         std::weak_ptr<SecureSessionSecSubAPI> secSessAPI)
 {
     this->secSessAPI = secSessAPI;
-    if (auto sptr = this->secSessAPI.lock()) {
-        sptr->registerSecSubCallbacks(
-            std::bind(&SecuritySubsystem::SecSessConfigureConfirm, this),
-            std::bind(&SecuritySubsystem::SecSessStartIndication, this,
-                    std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3),
-            std::bind(&SecuritySubsystem::SecSessEndSessionIndication, this,
-                    std::placeholders::_1, std::placeholders::_2),
-            std::bind(&SecuritySubsystem::SecSessDeactivateConfirm, this)
-        );
-    }
 }
 
 void SecuritySubsystem::SecSessConfigureConfirm()
@@ -48,7 +29,7 @@ void SecuritySubsystem::SecSessConfigureConfirm()
     std::cerr << "SecuritySubsystem::SecSessConfigureConfirm" << "\n";
 }
 
-void SecuritySubsystem::SecSessStartIndication(
+void SecuritySubsystem::SecSessionStartIndication(
         const BaseTypes::AppId & appId,
         const BaseTypes::SessionId & sessId,
         const BaseTypes::Certificate & cert)
@@ -90,7 +71,9 @@ void SecuritySubsystem::AppSecConfigureRequest(
     }
 
     std::cerr << "SecureSessionSecSubAPI::SecSessConfigureRequest" << " APP ID " << appId << "\n";
-    call_function(appSecConfigureConfirmCB, result);
+    call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
+        sptr->AppSecConfigureConfirm(result);
+    });
     if (sessionType == BaseTypes::SessionType::EXTERNAL) {
         // Cryptographic session is required
         std::cerr << "Will configure external session \n";
@@ -128,7 +111,9 @@ void SecuritySubsystem::AppSecDataRequest(
     // TODO: Call SecEnt to sign the data
     SecuritySubsystemAppAPI::AppSecDataConfirmResult result 
         = SecuritySubsystemAppAPI::AppSecDataConfirmResult::SUCCESS;
-    call_function(appSecDataConfirmCB, result, data);
+    call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
+        sptr->AppSecDataConfirm(result, data);
+    });
 }
 
 void SecuritySubsystem::AppSecIncomingRequest(
@@ -151,7 +136,9 @@ void SecuritySubsystem::AppSecIncomingRequest(
                 SecEnt::VerificationStatus status = SecEnt::verifyIeee1609Dot2DataSigned(ieeeDot2Data);
                 if (status != SecEnt::VerificationStatus::VerificationOK) {
                     result = Result::INVALID_SIGNED_IEEE1609DOT2_DATA;
-                    call_function(appSecIncomingConfirmCB, result);
+                    call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
+                        sptr->AppSecIncomingConfirm(result);
+                    });
                     return;
                 }
                 break;
@@ -168,7 +155,9 @@ void SecuritySubsystem::AppSecIncomingRequest(
     if (result == Result::SUCCESS) {
         // TODO: apply the access control policy
     }
-   call_function(appSecIncomingConfirmCB, result);
+   call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
+        sptr->AppSecIncomingConfirm(result);
+   });
 }
 
 
@@ -178,8 +167,10 @@ void SecuritySubsystem::AppSecEndSessionRequest(
     const BaseTypes::SessionId &sessionId)
 {
     std::cerr << "SecuritySubsystem::AppSecEndSessionRequest\n";
-    call_function(appSecEndSessionIndicationCB, 
+    call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
+        sptr->AppSecEndSessionIndication( 
             appId, sessionId, BaseTypes::EnumeratedSecLayer::APPLICATION);
+    });
     if (auto sptr = alAPI.lock()) {
         sptr->SecALEndSessionRequest(appId, sessionId);
     }
@@ -191,15 +182,20 @@ void SecuritySubsystem::forceEndSession(
     const BaseTypes::SessionId& sessionId)
 {
     std::cerr << "SecuritySubsystem::forceEndSession\n";
-    call_function(appSecEndSessionIndicationCB,
-            appId, sessionId, BaseTypes::EnumeratedSecLayer::SECURITY_SUBSYSTEM);
+    call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
+        sptr->AppSecEndSessionIndication(
+                appId, sessionId, BaseTypes::EnumeratedSecLayer::SECURITY_SUBSYSTEM
+        );
+    });
 }
 
 void SecuritySubsystem::endSession()
 {
     BaseTypes::AppId appId(11);
     BaseTypes::SecureSessionInstanceId secSessId(99);
-    call_function(appSecDeactivateIndicationCB, appId, secSessId);
+    call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
+        sptr->AppSecDeactivateIndication(appId, secSessId);
+    });
     if (auto sptr = secSessAPI.lock()) {
         sptr->SecSessDeactivateRequest(appId, secSessId);
     }
@@ -210,7 +206,9 @@ void SecuritySubsystem::AppSecDeactivateRequest(
     const BaseTypes::SecureSessionInstanceId &secureSessionId)
 {
     std::cerr << "SecuritySubsystem::AppSecDeactivateRequest\n";
-    call_function(appSecDeactivateConfirmCB);
+    call_function_wptr(appSecuritySubsystemAPI, [](auto sptr) {
+        sptr->AppSecDeactivateConfirm();
+    });
     if (auto sptr = secSessAPI.lock()) {
         sptr->SecSessDeactivateRequest(appId, secureSessionId);
     }
@@ -249,8 +247,11 @@ void SecuritySubsystem::SecSessEndSessionIndication(
     const BaseTypes::SessionId &sessionId)
 {
     std::cerr << "SecuritySubsystem::SecSessEndSessionIndication\n";
-    call_function(appSecEndSessionIndicationCB, 
-        appId, sessionId, BaseTypes::EnumeratedSecLayer::SECURE_SESSION_SERVICE);
+    call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
+        sptr->AppSecEndSessionIndication(
+                appId, sessionId, BaseTypes::EnumeratedSecLayer::SECURE_SESSION_SERVICE
+        );
+    });
     if (auto sptr = alAPI.lock()) {
         sptr->SecALEndSessionRequest(appId, sessionId);
     }

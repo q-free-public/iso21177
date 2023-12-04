@@ -51,7 +51,9 @@ void SecureSession::SecSessConfigureRequest(
         }
         data_[key] = data;
     }
-    call_function(secSessConfigureConfirmCB);
+    call_function_wptr(secSubSecureSessionAPI, [](auto sptr) {
+        sptr->SecSessConfigureConfirm();
+    });
 }
 
 void SecureSession::ALSessDataRequest(
@@ -128,7 +130,9 @@ void SecureSession::SecSessDeactivateRequest(
 {
     std::cerr << "SecureSession::SecSessDeactivateRequest\n";
     // No more new connections
-    call_function(secSessDeactivateConfirmCB);
+    call_function_wptr(secSubSecureSessionAPI, [](auto sptr) {
+        sptr->SecSessDeactivateConfirm();
+    });
     // TODO: IF server -> stop accepting incorming connections
     // TODO: IF client -> stop attempting new outgoing connections
     
@@ -140,8 +144,9 @@ void SecureSession::afterHandshake()
     BaseTypes::AppId appId = 1;
     BaseTypes::SessionId sessionId = 1;
     BaseTypes::Certificate cert = {0x01, 0x03, 0x05, 0x06};
-    call_function(secSessionStartIndicationCB,
-            appId, sessionId, cert);
+    call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
+        sptr->SecSessionStartIndication(appId, sessionId, cert);
+    });
 }
 
 void SecureSession::receiveData(const std::vector<uint8_t> &data)
@@ -158,7 +163,9 @@ void SecureSession::sessionTerminated()
 {
     BaseTypes::AppId appId(16);
     BaseTypes::SessionId sessionId(8);
-    call_function(secSessEndSessionIndicationCB, appId, sessionId);
+    call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
+        sptr->SecSessEndSessionIndication(appId, sessionId);
+    });
 }
 
 void SecureSession::waitForNetworkInput()
@@ -188,7 +195,9 @@ void SecureSession::waitForNetworkInput()
             if (data.size() == 0) {
                 std::cerr << "Socket is closed on the other side\n";
 
-                call_function(secSessEndSessionIndicationCB, it->first.first, it->first.second);
+                call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
+                    sptr->SecSessEndSessionIndication(it->first.first, it->first.second);
+                });
             };
         break;
     }
@@ -220,7 +229,9 @@ void SecureSession::waitForNetworkInput()
                 sockWithStatePtr->second = SocketState::OTHER_SIDE_CLOSED;
                 // Accepted socket is opened here, will be closed when ptr is destroyed
                 it->second.clientSockets.erase(sockWithStatePtr);
-                call_function(secSessEndSessionIndicationCB, it->first.first, it->first.second);
+                call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
+                    sptr->SecSessEndSessionIndication(it->first.first, it->first.second);
+                });
             };
         } else {
             std::cerr << "More than one client connected, this should not happen\n";

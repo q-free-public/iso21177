@@ -2,14 +2,7 @@
 
 #include <iostream>
 
-void SecureSessionSecSubAPI::registerSecSubCallbacks(
-    SecSessConfigureConfirmCB secSessConfigureConfirmCB, 
-    SecSessionStartIndicationCB secSessionStartIndicationCB, 
-    SecSessEndSessionIndicationCB secSessEndSessionIndicationCB,
-    SecSessDeactivateConfirmCB secSessDeactivateConfirmCB)
+void SecureSessionSecSubAPI::registerSecSubSecureSessionAPI(std::weak_ptr<SecSubSecureSessionAPI> ptr)
 {
-    this->secSessConfigureConfirmCB = secSessConfigureConfirmCB;
-    this->secSessionStartIndicationCB = secSessionStartIndicationCB;
-    this->secSessEndSessionIndicationCB = secSessEndSessionIndicationCB;
-    this->secSessDeactivateConfirmCB = secSessDeactivateConfirmCB;
+    this->secSubSecureSessionAPI = ptr;
 }

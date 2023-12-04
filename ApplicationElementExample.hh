@@ -7,13 +7,13 @@ class ApplicationElementExample : public ApplicationElementI {
 public:
 
     ApplicationElementExample();
-    virtual void AppSecureConfigureConfirm(
+    virtual void AppSecConfigureConfirm(
         SecuritySubsystemAppAPI::AppSecConfigureConfirmResult
     );
 
     virtual void AppSecStartSessionIndictation(
-        BaseTypes::AppId,
-        BaseTypes::SessionId
+        const BaseTypes::AppId&,
+        const BaseTypes::SessionId&
     );
 
     virtual void AppSecDataConfirm(
