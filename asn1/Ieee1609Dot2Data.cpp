@@ -38,4 +38,39 @@ Ieee1609Dot2Data::type Ieee1609Dot2Data::getType() const
     }
 }
 
+const std::vector<uint8_t> Ieee1609Dot2Data::getPayload() const
+{
+    std::vector<uint8_t> ret;
+
+    switch (getType()) {
+    case type::UnsecuredData:
+    {
+        std::array<uint8_t, 65535> buffer;
+        asn_enc_rval_t rval = oer_encode_to_buffer(&asn_DEF_Opaque, nullptr,
+            &data_->content->choice.unsecuredData, buffer.data(), buffer.size());
+        if (rval.encoded < 0) {
+            return ret;
+        }
+        ret.assign(buffer.begin(), buffer.begin() + rval.encoded);
+        break;
+    }
+    case type::SignedData: 
+    {
+        std::array<uint8_t, 65535> buffer;
+        asn_enc_rval_t rval = oer_encode_to_buffer(&asn_DEF_SignedData, nullptr,
+            data_->content->choice.signedData, buffer.data(), buffer.size());
+        if (rval.encoded < 0) {
+            return ret;
+        }
+        ret.assign(buffer.begin(), buffer.begin() + rval.encoded);
+        break;
+    }
+    //TODO: implement other types here
+    default:
+        break;
+    }
+    return ret;
+
+}
+
 } // namespace Asn1Helpers

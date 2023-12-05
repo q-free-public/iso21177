@@ -42,6 +42,7 @@ void AdaptorLayer::ALSessDataIndication(
 {
     std::cerr << "AdaptorLayer::ALSessDataIndication" << "\n";
     Asn1Helpers::AdaptorLayerPdu alPdu(alpduReceived);
+    alPdu.debugPrint();
 
     switch (alPdu.getType()) {
         // 1. TLS Handshake proxy PDU - unsupported

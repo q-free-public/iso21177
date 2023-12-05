@@ -14,10 +14,10 @@ SSL_CTX_Wrapper::SSL_CTX_Wrapper(Socket::Type type)
         ERR_print_errors_fp(stderr);
         throw std::runtime_error("SSL_CTX_set_min_proto_version failed");
     }
-    if (1 != SSL_CTX_load_verify_locations(_ptr.get(), "ca.cert.pem", NULL)) {
-		fprintf(stderr, "SSL_CTX_load_verify_locations failed: ");
-		ERR_print_errors_fp(stderr);
-		exit(EXIT_FAILURE);
-	}
+    // if (1 != SSL_CTX_load_verify_locations(_ptr.get(), "ca.cert.pem", NULL)) {
+	// 	fprintf(stderr, "SSL_CTX_load_verify_locations failed: ");
+	// 	ERR_print_errors_fp(stderr);
+	// 	exit(EXIT_FAILURE);
+	// }
     SSL_CTX_set_verify(_ptr.get(), SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
 }

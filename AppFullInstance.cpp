@@ -5,11 +5,16 @@
 
 #include "asn1/Ieee1609Dot2Data.hh"
 
-AppFullInstance::AppFullInstance()
-: secureSession(new SecureSession())
-, secSubsystem(new SecuritySubsystem())
-, adaptorLayer(new AdaptorLayer())
-, appEx(new ApplicationElementExample())
+AppFullInstance::AppFullInstance(
+        std::shared_ptr<SecureSession> secSession,
+        std::shared_ptr<SecuritySubsystem> secSubsystem,
+        std::shared_ptr<AdaptorLayer> adaptorLayer,
+        std::shared_ptr<ApplicationElementI> app
+    )
+: secureSession(secSession)
+, secSubsystem(secSubsystem)
+, adaptorLayer(adaptorLayer)
+, appEx(app)
 {
     appEx->registerSecuritySubsystemAPI(secSubsystem);
     secSubsystem->registerAppSecuritySubsystemAPI(appEx);
@@ -29,28 +34,33 @@ AppFullInstance::AppFullInstance()
     std::cerr <<"Init DONE\n";
 }
 
-AppFullInstance::AppFullInstance(std::shared_ptr<SecureSession> secSession)
-: secureSession(secSession)
-, secSubsystem(new SecuritySubsystem())
-, adaptorLayer(new AdaptorLayer())
-, appEx(new ApplicationElementExample())
+AppFullInstance::AppFullInstance()
+: AppFullInstance(
+    std::make_shared<SecureSession>(),
+    std::make_shared<SecuritySubsystem>(),
+    std::make_shared<AdaptorLayer>(),
+    std::make_shared<ApplicationElementExample>())
 {
-    appEx->registerSecuritySubsystemAPI(secSubsystem);
-    secSubsystem->registerAppSecuritySubsystemAPI(appEx);
+}
 
-    appEx->registerAdaptorLayerAPI(adaptorLayer);
-    adaptorLayer->registerAppAPI(appEx);
+AppFullInstance::AppFullInstance(std::shared_ptr<SecureSession> secSession)
+: AppFullInstance(
+    secSession,
+    std::make_shared<SecuritySubsystem>(),
+    std::make_shared<AdaptorLayer>(),
+    std::make_shared<ApplicationElementExample>())
+{
+}
 
-    secSubsystem->registerSecureSessionSecSubAPI(secureSession);
-    secureSession->registerSecSubSecureSessionAPI(secSubsystem);
-
-    secSubsystem->registerAdaptorLayerSecSubAPI(adaptorLayer);
-    adaptorLayer->registerSecSubALAPI(secSubsystem);
-
-    adaptorLayer->registerSecSessAPI(secureSession);
-    secureSession->registerALSecureSessionAPI(adaptorLayer);
-
-    std::cerr <<"Init DONE\n";
+AppFullInstance::AppFullInstance(
+    std::shared_ptr<SecureSession> secSession,
+    std::shared_ptr<ApplicationElementI> app)
+: AppFullInstance(
+    secSession,
+    std::make_shared<SecuritySubsystem>(),
+    std::make_shared<AdaptorLayer>(),
+    app)
+{
 }
 
 AppFullInstance::~AppFullInstance()
@@ -108,8 +118,8 @@ void AppFullInstance::sendData(BaseTypes::Data &data)
     // Sending without signing
     // TODO: it may be necessary to sign data
     std::vector<uint8_t> data_encap = Asn1Helpers::Ieee1609Dot2Data(std::integral_constant<Asn1Helpers::Ieee1609Dot2Data::type, Asn1Helpers::Ieee1609Dot2Data::type::UnsecuredData>(), data).getEncodedBuffer();
-    appEx->executeWithALAPI([&](AdaptorLayerAppAPI& alAppAPI){
-        alAppAPI.AppALDataRequest(
+    call_function_wptr(appEx->aLAppAPI, [&](std::shared_ptr<AdaptorLayerAppAPI> sptr) {
+        sptr->AppALDataRequest(
             this->data_->appId,
             this->data_->sessionId,
             data_encap);
@@ -124,10 +134,11 @@ void AppFullInstance::forceEndSession()
     }
     // Sending without signing
     // TODO: it may be necessary to encapsulate data in IEEE1609.2Data
-    appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secSubAPI){
-        secSubAPI.AppSecEndSessionRequest(
+    call_function_wptr(appEx->secSubsystemAppAPI, [&](auto sptr) {
+        sptr->AppSecEndSessionRequest(
             this->data_->appId,
-            this->data_->sessionId);
+            this->data_->sessionId
+        );
     });
 }
 

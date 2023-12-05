@@ -38,3 +38,8 @@ add_executable(Example-debug Example-debug.cpp)
 target_link_libraries(Example-debug iso_code adaptorLayer ${ITS_ASN1_LIBRARY} ${OPENSSL_LIBRARIES})
 add_executable(ExampleTLS ExampleTLS.cpp)
 target_link_libraries(ExampleTLS iso_code adaptorLayer ${ITS_ASN1_LIBRARY} ${OPENSSL_LIBRARIES})
+
+add_executable(ExampleClientTLS ExampleClientTLS.cpp)
+target_link_libraries(ExampleClientTLS iso_code adaptorLayer ${ITS_ASN1_LIBRARY} ${OPENSSL_LIBRARIES})
+add_executable(ExampleServerTLS ExampleServerTLS.cpp)
+target_link_libraries(ExampleServerTLS iso_code adaptorLayer ${ITS_ASN1_LIBRARY} ${OPENSSL_LIBRARIES})

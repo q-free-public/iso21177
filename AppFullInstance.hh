@@ -11,6 +11,18 @@ class AppFullInstance {
 public:
     AppFullInstance();
     AppFullInstance(std::shared_ptr<SecureSession> secSession);
+    AppFullInstance(
+        std::shared_ptr<SecureSession> secSession,
+        std::shared_ptr<ApplicationElementI> app
+    );
+private:
+    AppFullInstance(
+        std::shared_ptr<SecureSession> secSession,
+        std::shared_ptr<SecuritySubsystem> secSubsystem,
+        std::shared_ptr<AdaptorLayer> adaptorLayer,
+        std::shared_ptr<ApplicationElementI> app
+    );
+public:
     ~AppFullInstance();
 
     void configureApplication(
@@ -25,7 +37,7 @@ private:
     std::shared_ptr<SecureSession> secureSession;
     std::shared_ptr<SecuritySubsystem> secSubsystem;
     std::shared_ptr<AdaptorLayer> adaptorLayer;
-    std::shared_ptr<ApplicationElementExample> appEx;
+    std::shared_ptr<ApplicationElementI> appEx;
 
     struct data_t {
         BaseTypes::Role role;

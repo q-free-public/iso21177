@@ -49,7 +49,7 @@ public:
     virtual void registerSecuritySubsystemAPI(std::weak_ptr<SecuritySubsystemAppAPI> ptr);
     virtual void registerAdaptorLayerAPI(std::weak_ptr<AdaptorLayerAppAPI> ptr);
 
-protected:
+public:
     std::weak_ptr<SecuritySubsystemAppAPI> secSubsystemAppAPI;
     std::weak_ptr<AdaptorLayerAppAPI> aLAppAPI;
 };

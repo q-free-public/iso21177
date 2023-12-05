@@ -60,6 +60,7 @@ void call_function_wptr(std::weak_ptr<T> el, F fn) {
     if (std::shared_ptr<T> sptr = el.lock()) {
         fn(sptr);
     } else {
+        std::cerr << "Weak pointer is uninitialized\n";
         throw std::runtime_error("Unable to lock weak pointer");
     }
 }
