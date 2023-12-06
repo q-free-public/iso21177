@@ -49,6 +49,7 @@ public:
     // void registerEndCallback(std::function<void()> fn);
     void configureApp(BaseTypes::SessionId sessionId, BaseTypes::Role role);
     void sendDataUnsecured(const BaseTypes::Data& data);
+    void sendDataSecured(const BaseTypes::Data& data);
     
 
 

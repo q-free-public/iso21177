@@ -134,7 +134,7 @@ void SecuritySubsystem::AppSecIncomingRequest(
         switch (ieeeDot2Data.getType()) {
             case Asn1Helpers::Ieee1609Dot2Data::type::SignedData: {
                 SecEnt::VerificationStatus status = SecEnt::verifyIeee1609Dot2DataSigned(ieeeDot2Data);
-                if (status != SecEnt::VerificationStatus::VerificationOK) {
+                if (status != SecEnt::VerificationStatus::OK) {
                     result = Result::INVALID_SIGNED_IEEE1609DOT2_DATA;
                     call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
                         sptr->AppSecIncomingConfirm(result);

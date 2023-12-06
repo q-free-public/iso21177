@@ -31,12 +31,15 @@ public:
                 "\n" + hex_string(data));
         }
     }
+    asn1c_wrapper(const asn1c_wrapper<T>& other)
+    : asn1c_wrapper(other.asn1c_def_, other.getEncodedBuffer()) {
+    }
     ~asn1c_wrapper() {
         if (data_) {
             ASN_STRUCT_FREE_CONTENTS_ONLY(*asn1c_def_, data_.get());
         }
     }
-    std::vector<uint8_t> getEncodedBuffer() {
+    std::vector<uint8_t> getEncodedBuffer() const {
         std::array<uint8_t, 65535> buffer;
 
         asn_enc_rval_t rval = oer_encode_to_buffer(asn1c_def_, nullptr,
