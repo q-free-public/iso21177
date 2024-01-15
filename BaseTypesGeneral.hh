@@ -10,6 +10,10 @@
 #include <iomanip>
 #include <memory>
 
+namespace Asn1Helpers {
+    class Ieee1609Dot2Data;
+}
+
 namespace BaseTypes {
     // 7.7.1 App-Sec-Configure Request
     typedef uint64_t AppId;
@@ -32,9 +36,9 @@ namespace BaseTypes {
     // 1609.2 Types
     typedef uint64_t AID;
     typedef std::vector<uint8_t> SSP;
-    typedef std::vector<uint8_t> HashedId8;
+    typedef std::array<uint8_t, 8> HashedId8;
     typedef std::vector<uint8_t> Certificate;
-    typedef std::vector<uint8_t> SignedData;
+    typedef Asn1Helpers::Ieee1609Dot2Data SignedData;
     typedef std::vector<uint8_t> SignedDataVerificationParams;
 
 

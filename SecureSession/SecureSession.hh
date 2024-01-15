@@ -55,7 +55,7 @@ public:
     virtual void receiveData(const std::vector<uint8_t>& data);
     // This is called when a session is lost
     virtual void sessionTerminated();
-    virtual void waitForNetworkInput();
+    virtual bool waitForNetworkInput();
 
 private:
     enum class SocketState { CREATED, BEFORE_HANDSHAKE, AFTER_HANDSHAKE, OTHER_SIDE_CLOSED, SERVER_SOCKET};

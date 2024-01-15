@@ -27,6 +27,8 @@
 class sec_ent_msg {
 private:
     sec_ent_msg(uint8_t msg_type, uint32_t msg_len, const std::vector<uint8_t>& payload);
+    // construct before receiving the payload
+    sec_ent_msg(uint8_t msg_type, uint32_t msg_len);
 public:
     sec_ent_msg(uint8_t msg_type, const std::vector<uint8_t>& payload);
     
@@ -49,10 +51,7 @@ public:
 template <class T>
 std::vector<uint8_t> serialize_message(const T msg) {
     std::vector<uint8_t> payload = msg.serialize_payload();
-    sec_ent_msg helper;
-    helper.msg_type = msg.type();
-    helper.msg_len = payload.size();
-    helper.payload = payload;
+    sec_ent_msg helper(msg.type(), payload);
     return helper.serialize();
 }
 
@@ -70,7 +69,7 @@ class sec_ent_msg_failure {
 public:
     sec_ent_msg_failure(const std::string& msg);
     static sec_ent_msg_failure parse_payload(const std::vector<uint8_t> payload);
-    static uint8_t type() { return SEC_ENT_MSG_TYPE_FAILURE; };
+    static constexpr uint8_t type() { return SEC_ENT_MSG_TYPE_FAILURE; };
     const std::string& message() const { return message_; };
 private:
 	std::string message_;
@@ -80,7 +79,7 @@ class sec_ent_msg_sign_req {
 public:
     sec_ent_msg_sign_req(const Asn1Helpers::SignerIdentifier& sig_id, const std::vector<uint8_t>& tbs_data);
     virtual std::vector<uint8_t> serialize_payload() const;
-    static uint8_t type() { return SEC_ENT_MSG_TYPE_SIGN_DATA; };
+    static constexpr uint8_t type() { return SEC_ENT_MSG_TYPE_SIGN_DATA; };
 private:
     Asn1Helpers::SignerIdentifier signer_id;
     std::vector<uint8_t> tbs_data;
@@ -91,7 +90,26 @@ class sec_ent_msg_sign_reply {
 public:
     sec_ent_msg_sign_reply(const Asn1Helpers::Ieee1609Dot2Data& signed_data);
     static sec_ent_msg_sign_reply parse_payload(const std::vector<uint8_t> payload);
-    static uint8_t type() { return SEC_ENT_MSG_TYPE_SIGN_DATA; };
+    static constexpr uint8_t type() { return SEC_ENT_MSG_TYPE_SIGN_DATA; };
+    const Asn1Helpers::Ieee1609Dot2Data& getSignedData();
 private:
     Asn1Helpers::Ieee1609Dot2Data signed_data;
+};
+
+class sec_ent_get_at_req {
+public:
+    sec_ent_get_at_req() = default;
+    virtual std::vector<uint8_t> serialize_payload() const;
+    static constexpr uint8_t type() { return SEC_ENT_MSG_TYPE_GET_AT; };
+private:
+};
+
+class sec_ent_get_at_reply {
+public:
+    sec_ent_get_at_reply(const BaseTypes::HashedId8& hash);
+    static sec_ent_get_at_reply parse_payload(const std::vector<uint8_t>& payload);
+    static constexpr uint8_t type() { return SEC_ENT_MSG_TYPE_GET_AT; };
+    const BaseTypes::HashedId8& getATHash();
+private:
+    BaseTypes::HashedId8 at_hash_;
 };

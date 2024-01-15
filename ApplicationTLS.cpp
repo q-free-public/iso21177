@@ -9,32 +9,53 @@ ApplicationTLS::ApplicationTLS()
 {
 }
 
-void ApplicationTLS::AppSecConfigureConfirm(SecuritySubsystemAppAPI::AppSecConfigureConfirmResult)
+void ApplicationTLS::AppSecConfigureConfirm(SecuritySubsystemAppAPI::AppSecConfigureConfirmResult res)
 {
+    std::cerr << "!!ApplicationTLS::AppSecConfigureConfirm " << static_cast<uint8_t>(res) << "\n";
 }
 
-void ApplicationTLS::AppSecStartSessionIndictation(const BaseTypes::AppId &, const BaseTypes::SessionId &)
+void ApplicationTLS::AppSecStartSessionIndictation(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)
 {
+    std::cerr << "!!ApplicationTLS::AppSecStartSessionIndictation " << appId << " " << sessionId << "\n";
 }
 
-void ApplicationTLS::AppSecDataConfirm(SecuritySubsystemAppAPI::AppSecDataConfirmResult, const BaseTypes::SignedData &)
+void ApplicationTLS::AppSecDataConfirm(SecuritySubsystemAppAPI::AppSecDataConfirmResult res,
+        const BaseTypes::SignedData &signedData)
 {
+    std::cerr << "!!ApplicationTLS::AppSecDataConfirm " 
+        << (res == SecuritySubsystemAppAPI::AppSecDataConfirmResult::SUCCESS) 
+        << "\n";
+    signedData.debugPrint();
+    // this was signed - now we want to send
+    if (res == SecuritySubsystemAppAPI::AppSecDataConfirmResult::SUCCESS) {
+        call_function_wptr(this->aLAppAPI, [&](std::shared_ptr<AdaptorLayerAppAPI> sptr) {
+            sptr->AppALDataRequest(
+                this->data_->appId,
+                this->data_->sessionId,
+                signedData.getEncodedBuffer());
+        });
+    } else {
+        std::cerr << "!!ApplicationTLS::AppSecDataConfirm : failed to sign data, will not be sent out \n";
+        throw std::runtime_error("ApplicationTLS::AppSecDataConfirm : failed to sign data, will not be sent out");
+    }
 }
 
 void ApplicationTLS::AppALDataConfirm()
 {
+    std::cerr << "!!ApplicationTLS::AppALDataConfirm " << "\n";
 }
 
-void ApplicationTLS::AppALDataIndication(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId, const BaseTypes::Data &data)
+void ApplicationTLS::AppALDataIndication(const BaseTypes::AppId &appId, 
+        const BaseTypes::SessionId &sessionId, const BaseTypes::Data &data)
 {
     
-    std::cerr << "### Received data: " << hex_string(data) << "\n";
+    std::cerr << "!!ApplicationTLS::AppALDataIndication: local session info " << appId << " " << sessionId << "\n";
+    std::cerr << "Application data received\n";
     Asn1Helpers::APDU apdu_parsed(data);
     Asn1Helpers::Ieee1609Dot2Data data_parsed(apdu_parsed.getPayload());
     data_parsed.debugPrint();
     std::vector<uint8_t> data_payload = data_parsed.getPayload();
-    std::cerr << std::string(data_payload.begin(), data_payload.end()) << "\n";
-    sendDataUnsecured(data_payload);
+    std::cerr << "payload " << hex_string(data_payload) << "\n";
 }
 
 void ApplicationTLS::AppSecIncomingConfirm(SecuritySubsystemAppAPI::AppSecIncomingConfirmResult)
@@ -52,14 +73,22 @@ void ApplicationTLS::AppSecDeactivateConfirm()
 
 void ApplicationTLS::AppSecDeactivateIndication(const BaseTypes::AppId &appId, const BaseTypes::SecureSessionInstanceId &secureSessionId)
 {
-    std::cerr << "##########Session was deactivated!!!\n";
-}
+    std::cerr << "##########Session was deactivated!!!\n";}
 
 void ApplicationTLS::configureApp(BaseTypes::SessionId sessionId, BaseTypes::Role role)
 {
     int port = 2337;
     BaseTypes::AppId appId = 623;
-    BaseTypes::CryptomaterialHandle cryptoHandle = {0x1D, 0x1B, 0x90, 0x41, 0x03, 0xAF, 0x03, 0xD2};
+    BaseTypes::CryptomaterialHandle cryptoHandle = {0xBA, 0x96, 0x84, 0xD4, 0x3A, 0x46, 0x21, 0x77};
+    configureApp(port, sessionId, role, appId, cryptoHandle);
+}
+
+void ApplicationTLS::configureApp(
+    int port,
+    BaseTypes::SessionId sessionId, BaseTypes::Role role,
+    BaseTypes::AppId appId, BaseTypes::CryptomaterialHandle cryptoHandle
+)
+{
     BaseTypes::Socket sock;
         switch (role) {
         case BaseTypes::Role::SERVER: {
@@ -87,15 +116,27 @@ void ApplicationTLS::configureApp(BaseTypes::SessionId sessionId, BaseTypes::Rol
 void ApplicationTLS::sendDataUnsecured(const BaseTypes::Data& data)
 {
     std::vector<uint8_t> data_encap = Asn1Helpers::Ieee1609Dot2Data(
-        std::integral_constant<Asn1Helpers::Ieee1609Dot2Data::type, Asn1Helpers::Ieee1609Dot2Data::type::UnsecuredData>(), data
-    ).getEncodedBuffer();
-    std::vector<uint8_t> apdu_encap = Asn1Helpers::APDU(std::integral_constant<Asn1Helpers::APDU::type, Asn1Helpers::APDU::type::DATA>(), data_encap
-    ).getEncodedBuffer();
+        std::integral_constant<
+            Asn1Helpers::Ieee1609Dot2Data::type,
+            Asn1Helpers::Ieee1609Dot2Data::type::UnsecuredData
+        >(), data).getEncodedBuffer();
     call_function_wptr(this->aLAppAPI, [&](std::shared_ptr<AdaptorLayerAppAPI> sptr) {
         sptr->AppALDataRequest(
             this->data_->appId,
             this->data_->sessionId,
-            apdu_encap);
+            data_encap);
+    });
+}
+
+void ApplicationTLS::sendDataSecured(const BaseTypes::Data &data)
+{
+    if (!data_) {
+        throw std::runtime_error("Application uninitialized");
+    }
+    BaseTypes::SigningParameters signParams = "no-params";
+    call_function_wptr(this->secSubsystemAppAPI, [&](std::shared_ptr<SecuritySubsystemAppAPI> sptr) {
+        sptr->AppSecDataRequest(this->data_->appId, this->data_->sessionId, this->data_->cryptoHandle,
+                data, signParams);
     });
 }
 

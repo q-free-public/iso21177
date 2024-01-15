@@ -7,13 +7,15 @@
 #include "SecureSession/SecureSessionSecSubAPI.hh"
 #include "SecuritySubsystemInternalInterface.hh"
 
+#include "sec_ent_comm/sec_ent_api.hh"
+
 class SecuritySubsystem 
 : public SecuritySubsystemAppAPI
 , public SecuritySubsystemInternalInterface
 , public SecSubSecureSessionAPI
 , public SecSubAdaptorLayerAPI {
 public:
-    SecuritySubsystem();
+    SecuritySubsystem(SecEnt::SecEntCommunicator& comm);
     void registerAdaptorLayerSecSubAPI(std::weak_ptr<AdaptorLayerSecSubAPI> );
     void registerSecureSessionSecSubAPI(std::weak_ptr<SecureSessionSecSubAPI>);
 
@@ -102,4 +104,5 @@ public:
 private:
     std::weak_ptr<AdaptorLayerSecSubAPI> alAPI;
     std::weak_ptr<SecureSessionSecSubAPI> secSessAPI;
+    SecEnt::SecEntCommunicator& secEntComm_;
 };

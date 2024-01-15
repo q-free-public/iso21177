@@ -17,7 +17,8 @@ std::mutex m;
 bool serverReady = false;
 
 auto serverThreadFn = [](){
-    AppFullInstance appServ;
+    SecEnt::SecEntCommunicator secEntComm;
+    AppFullInstance appServ(secEntComm);
 
     appServ.configureApplication(123, BaseTypes::Role::SERVER);
     std::cerr << "====> Server now configured\n";
@@ -38,7 +39,8 @@ auto serverThreadFn = [](){
 };
 
 auto clientThreadFn = [](){
-    AppFullInstance appClient;
+    SecEnt::SecEntCommunicator secEntComm;
+    AppFullInstance appClient(secEntComm);
 
     std::unique_lock<std::mutex> lock{m};
     cond_var.wait(lock, []() { return serverReady; });
@@ -68,8 +70,9 @@ int main() {
 
     if (true){
         std::cerr << "======> Now without threads\n";
-        AppFullInstance appServ;
-        AppFullInstance appClient;
+        SecEnt::SecEntCommunicator secEntComm;
+        AppFullInstance appServ(secEntComm);
+        AppFullInstance appClient(secEntComm);
 
         appServ.configureApplication(123, BaseTypes::Role::SERVER);
         std::cerr << "====> Server now configured\n";
@@ -101,8 +104,9 @@ int main() {
         appServ.waitForNetworkInput();
     }
     if (false){
-        AppFullInstance appServ;
-        AppFullInstance appClient;
+        SecEnt::SecEntCommunicator secEntComm;
+        AppFullInstance appServ(secEntComm);
+        AppFullInstance appClient(secEntComm);
 
         appServ.configureApplication(123, BaseTypes::Role::SERVER);
         std::cerr << "====> Server now configured\n";

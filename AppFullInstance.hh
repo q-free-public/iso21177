@@ -9,14 +9,18 @@
 
 class AppFullInstance {
 public:
-    AppFullInstance();
-    AppFullInstance(std::shared_ptr<SecureSession> secSession);
+    AppFullInstance(SecEnt::SecEntCommunicator& secEntComm);
     AppFullInstance(
+        SecEnt::SecEntCommunicator& secEntComm,
+        std::shared_ptr<SecureSession> secSession);
+    AppFullInstance(
+        SecEnt::SecEntCommunicator& secEntComm,
         std::shared_ptr<SecureSession> secSession,
         std::shared_ptr<ApplicationElementI> app
     );
 private:
     AppFullInstance(
+        SecEnt::SecEntCommunicator& secEntComm,
         std::shared_ptr<SecureSession> secSession,
         std::shared_ptr<SecuritySubsystem> secSubsystem,
         std::shared_ptr<AdaptorLayer> adaptorLayer,
@@ -34,6 +38,8 @@ public:
     void forceEndSession();
     void closeSocket();
 private:
+    SecEnt::SecEntCommunicator& secEntComm_;
+
     std::shared_ptr<SecureSession> secureSession;
     std::shared_ptr<SecuritySubsystem> secSubsystem;
     std::shared_ptr<AdaptorLayer> adaptorLayer;

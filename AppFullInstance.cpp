@@ -6,12 +6,14 @@
 #include "asn1/Ieee1609Dot2Data.hh"
 
 AppFullInstance::AppFullInstance(
+        SecEnt::SecEntCommunicator& secEntComm,
         std::shared_ptr<SecureSession> secSession,
         std::shared_ptr<SecuritySubsystem> secSubsystem,
         std::shared_ptr<AdaptorLayer> adaptorLayer,
         std::shared_ptr<ApplicationElementI> app
     )
-: secureSession(secSession)
+: secEntComm_(secEntComm)
+, secureSession(secSession)
 , secSubsystem(secSubsystem)
 , adaptorLayer(adaptorLayer)
 , appEx(app)
@@ -34,30 +36,38 @@ AppFullInstance::AppFullInstance(
     std::cerr <<"Init DONE\n";
 }
 
-AppFullInstance::AppFullInstance()
+AppFullInstance::AppFullInstance(
+    SecEnt::SecEntCommunicator& secEntComm
+)
 : AppFullInstance(
+    secEntComm,
     std::make_shared<SecureSession>(),
-    std::make_shared<SecuritySubsystem>(),
-    std::make_shared<AdaptorLayer>(),
-    std::make_shared<ApplicationElementExample>())
-{
-}
-
-AppFullInstance::AppFullInstance(std::shared_ptr<SecureSession> secSession)
-: AppFullInstance(
-    secSession,
-    std::make_shared<SecuritySubsystem>(),
+    std::make_shared<SecuritySubsystem>(secEntComm),
     std::make_shared<AdaptorLayer>(),
     std::make_shared<ApplicationElementExample>())
 {
 }
 
 AppFullInstance::AppFullInstance(
+    SecEnt::SecEntCommunicator& secEntComm,
+    std::shared_ptr<SecureSession> secSession)
+: AppFullInstance(
+    secEntComm,
+    secSession,
+    std::make_shared<SecuritySubsystem>(secEntComm),
+    std::make_shared<AdaptorLayer>(),
+    std::make_shared<ApplicationElementExample>())
+{
+}
+
+AppFullInstance::AppFullInstance(
+    SecEnt::SecEntCommunicator& secEntComm,
     std::shared_ptr<SecureSession> secSession,
     std::shared_ptr<ApplicationElementI> app)
 : AppFullInstance(
+    secEntComm,
     secSession,
-    std::make_shared<SecuritySubsystem>(),
+    std::make_shared<SecuritySubsystem>(secEntComm),
     std::make_shared<AdaptorLayer>(),
     app)
 {
@@ -76,7 +86,7 @@ void AppFullInstance::configureApplication(
     }
     int port = 2337;
     BaseTypes::AppId appId = 623;
-    BaseTypes::CryptomaterialHandle cryptoHandle = {0x1D, 0x1B, 0x90, 0x41, 0x03, 0xAF, 0x03, 0xD2};
+    BaseTypes::CryptomaterialHandle cryptoHandle = {0xBA, 0x96, 0x84, 0xD4, 0x3A, 0x46, 0x21, 0x77};
     BaseTypes::Socket sock;
     switch (role) {
         case BaseTypes::Role::SERVER: {
@@ -117,7 +127,11 @@ void AppFullInstance::sendData(BaseTypes::Data &data)
     }
     // Sending without signing
     // TODO: it may be necessary to sign data
-    std::vector<uint8_t> data_encap = Asn1Helpers::Ieee1609Dot2Data(std::integral_constant<Asn1Helpers::Ieee1609Dot2Data::type, Asn1Helpers::Ieee1609Dot2Data::type::UnsecuredData>(), data).getEncodedBuffer();
+    std::vector<uint8_t> data_encap = Asn1Helpers::Ieee1609Dot2Data(
+        std::integral_constant<
+            Asn1Helpers::Ieee1609Dot2Data::type, 
+            Asn1Helpers::Ieee1609Dot2Data::type::UnsecuredData
+        >(), data).getEncodedBuffer();
     call_function_wptr(appEx->aLAppAPI, [&](std::shared_ptr<AdaptorLayerAppAPI> sptr) {
         sptr->AppALDataRequest(
             this->data_->appId,

@@ -20,24 +20,21 @@ public:
     }
     asn1c_wrapper(asn_TYPE_descriptor_t * def, const std::vector<uint8_t>& data)
     : asn1c_def_(def) {
-        if (def == nullptr) {
-            throw std::runtime_error("invalid asn_TYPE_descriptor_t");
-        }
-        T *el_ = 0;
-        asn_dec_rval_t rval = oer_decode(0, asn1c_def_, (void**)&el_, data.data(), data.size());
-        data_ = std::unique_ptr<T>(el_);
-        if (rval.consumed != data.size()) {
-            throw std::runtime_error("ASN.1: Mismatch in consumed data: " + std::to_string(rval.consumed) + " expected " + std::to_string(data.size()) + 
-                "\n" + hex_string(data));
-        }
+        this->parseFromBuff(data);
     }
     asn1c_wrapper(const asn1c_wrapper<T>& other)
     : asn1c_wrapper(other.asn1c_def_, other.getEncodedBuffer()) {
     }
     ~asn1c_wrapper() {
         if (data_) {
-            ASN_STRUCT_FREE_CONTENTS_ONLY(*asn1c_def_, data_.get());
+            ASN_STRUCT_FREE(*asn1c_def_, data_.release());
         }
+    }
+    void operator=(const asn1c_wrapper<T>& other) {
+        if (data_) {
+            ASN_STRUCT_FREE(*asn1c_def_, data_.release());
+        }
+        this->parseFromBuff(other.getEncodedBuffer());
     }
     std::vector<uint8_t> getEncodedBuffer() const {
         std::array<uint8_t, 65535> buffer;
@@ -53,8 +50,21 @@ public:
         return ret;
     }
 
-    void debugPrint() {
+    void debugPrint() const {
         xer_fprint(stdout, asn1c_def_, data_.get());
+    }
+private:
+    void parseFromBuff(const std::vector<uint8_t>& data) {
+        if (asn1c_def_ == nullptr) {
+            throw std::runtime_error("invalid asn_TYPE_descriptor_t");
+        }
+        T *el_ = 0;
+        asn_dec_rval_t rval = oer_decode(0, asn1c_def_, (void**)&el_, data.data(), data.size());
+        data_ = std::unique_ptr<T>(el_);
+        if (rval.consumed != data.size()) {
+            throw std::runtime_error("ASN.1: Mismatch in consumed data: " + std::to_string(rval.consumed) + " expected " + std::to_string(data.size()) + 
+                "\n" + hex_string(data));
+        }
     }
 
 protected:

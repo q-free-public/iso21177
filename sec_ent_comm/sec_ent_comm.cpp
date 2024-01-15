@@ -2,6 +2,8 @@
 
 #include "reconnecting_socket.hh"
 #include "sec_ent_messages.hh"
+#include "sec_ent_comm.hh"
+#include "../SecEntData.hh"
 
 template<class Tret, class Treq>
 Tret send_recv(reconnecting_socket& socket, const Treq& req) {
@@ -30,6 +32,7 @@ Tret send_recv(reconnecting_socket& socket, const Treq& req) {
 	if (ec != boost::system::errc::success && ec != boost::asio::error::eof) {
 		throw boost::system::system_error(ec); // Some other error.
 	}
+	recv_msg.parse_payload(recv_payload);
 //	std::cout << "Received message: " << recv_msg.to_string() << "\n";
 
 	uint8_t header = recv_msg.msg_type;
@@ -46,4 +49,21 @@ Tret send_recv(reconnecting_socket& socket, const Treq& req) {
 		}
 	}
 	return Tret::parse_payload(recv_msg.payload);
+}
+
+template
+sec_ent_msg_sign_reply send_recv(reconnecting_socket& socket, const sec_ent_msg_sign_req& req);
+template
+sec_ent_get_at_reply send_recv(reconnecting_socket& socket, const sec_ent_get_at_req& req);
+
+
+
+SecEntCommState::SecEntCommState(const std::string addr, int port)
+: socket_(io_service_, addr, port)
+{
+}
+
+reconnecting_socket &SecEntCommState::get_sock()
+{
+    return this->socket_;
 }

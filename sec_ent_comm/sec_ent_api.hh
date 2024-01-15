@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../asn1/Ieee1609Dot2Data.hh"
+#include "asn1/ToBeSignedData.hh"
+#include "sec_ent_comm.hh"
 
 namespace SecEnt {
     enum class VerificationStatus {
@@ -13,7 +15,19 @@ namespace SecEnt {
         FAILED
     };
 
-    VerificationStatus verifyIeee1609Dot2DataSigned(const Asn1Helpers::Ieee1609Dot2Data& data);
-    SigningStatus signData(const std::vector<uint8_t>& input_payload, Asn1Helpers::Ieee1609Dot2Data& signed_data);
+    class SecEntCommunicator {
+    public:
+        SecEntCommunicator(const std::string address = "127.0.0.1", int port = 3912);
+        SecEntCommunicator(const SecEntCommunicator&) = delete;
+        VerificationStatus verifyIeee1609Dot2DataSigned(const Asn1Helpers::Ieee1609Dot2Data& data);
+        SigningStatus signData(const Asn1Helpers::ToBeSignedData &tbsData,
+            BaseTypes::CryptomaterialHandle cryptoHandle,
+            Asn1Helpers::Ieee1609Dot2Data& signed_data);
+        BaseTypes::CryptomaterialHandle getCurrentATCert();
+    private:
+        std::string address_;
+        int port_;
+        SecEntCommState comm_;
+    };
 
 }

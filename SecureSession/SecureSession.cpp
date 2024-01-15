@@ -168,7 +168,7 @@ void SecureSession::sessionTerminated()
     });
 }
 
-void SecureSession::waitForNetworkInput()
+bool SecureSession::waitForNetworkInput()
 {
     // Currently there is just a simple implementation which waits for a single socket.
     // in case of client this is a socket with connection to the server
@@ -208,7 +208,7 @@ void SecureSession::waitForNetworkInput()
             BaseTypes::Socket sock = it->second.socket.first;
             if (!sock) {
                 std::cerr << "invalid socket\n";
-                return;
+                return false;
             }
             auto client_sock = sock->acceptClientConnection();
             //TODO: here handshake check should happen
@@ -239,6 +239,7 @@ void SecureSession::waitForNetworkInput()
         break;
     }
     }
+    return true;
 }
 
 void SecureSession::attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId)

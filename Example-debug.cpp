@@ -12,8 +12,9 @@
 #include "Sockets/SocketTCP.hh"
 
 int main() {
+    SecEnt::SecEntCommunicator secEntComm;
     std::shared_ptr<SecureSession> secureSession(new SecureSession());
-    std::shared_ptr<SecuritySubsystem> secSubsystem(new SecuritySubsystem());
+    std::shared_ptr<SecuritySubsystem> secSubsystem(new SecuritySubsystem(secEntComm));
     std::shared_ptr<AdaptorLayer> adaptorLayer(new AdaptorLayer);
     std::shared_ptr<ApplicationElementExample> appEx(new ApplicationElementExample());
 

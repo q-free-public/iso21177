@@ -23,7 +23,7 @@ void SocketClientTLS::connectToServer()
 
 bool SocketClientTLS::attemptHandshakeAsClient(const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle)
 {
-    std::cerr << "SocketTLS::attemptHandshakeAsClient\n";
+    std::cerr << "SocketClientTLS::attemptHandshakeAsClient\n";
     ssl_ = SSL_Wrapper(this->ssl_ctx_);
     if (!*ssl_) {
         fprintf(stderr, "SSL_new failed\n");
@@ -53,6 +53,8 @@ bool SocketClientTLS::attemptHandshakeAsClient(const BaseTypes::AppId &appId, co
         fprintf(stderr, "SSL_connect failed\n");
         return false;
     }
+    std::cerr << "SSL string " << SSL_state_string_long(*ssl_) << "\n";
+    SSL_SESSION_print_fp(stderr, SSL_get_session(*ssl_));
     std::cerr << "SSL_connect done\n";
     return true;
 }

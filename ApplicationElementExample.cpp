@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "asn1/APDU.hh"
+#include "asn1/Ieee1609Dot2Data.hh"
 
 ApplicationElementExample::ApplicationElementExample()
 : ApplicationElementI()
@@ -28,7 +29,8 @@ void ApplicationElementExample::AppSecDataConfirm(
     const BaseTypes::SignedData &signedData)
 {
     std::cerr << "ApplicationElementExample::AppSecDataConfirm " 
-    << (int)(result) << " data len: " << signedData.size() << "\n";
+    << (int)(result) << "\n";
+    signedData.debugPrint();
 }
 
 void ApplicationElementExample::AppALDataConfirm()

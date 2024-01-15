@@ -6,6 +6,15 @@
 
 namespace Asn1Helpers {
 
+Ieee1609Dot2Data::Ieee1609Dot2Data(std::integral_constant<type, type::NOTHING> i)
+: asn1c_wrapper(&asn_DEF_Ieee1609Dot2Data)
+{
+    data_->protocolVersion = 0x03;
+    data_->content = static_cast<struct Ieee1609Dot2Content *>(calloc(1, sizeof(struct Ieee1609Dot2Content)));
+    data_->content->present = Ieee1609Dot2Content_PR_NOTHING;
+}
+
+
 Ieee1609Dot2Data::Ieee1609Dot2Data(std::integral_constant<type, type::UnsecuredData> i, const std::vector<uint8_t> &data_input)
 : asn1c_wrapper(&asn_DEF_Ieee1609Dot2Data)
 {
@@ -46,12 +55,10 @@ const std::vector<uint8_t> Ieee1609Dot2Data::getPayload() const
     case type::UnsecuredData:
     {
         std::array<uint8_t, 65535> buffer;
-        asn_enc_rval_t rval = oer_encode_to_buffer(&asn_DEF_Opaque, nullptr,
-            &data_->content->choice.unsecuredData, buffer.data(), buffer.size());
-        if (rval.encoded < 0) {
-            return ret;
-        }
-        ret.assign(buffer.begin(), buffer.begin() + rval.encoded);
+        int to_copy = std::min(buffer.size(), data_->content->choice.unsecuredData.size);
+        std::copy_n(data_->content->choice.unsecuredData.buf, to_copy, buffer.begin());
+
+        ret.assign(buffer.begin(), buffer.begin() + to_copy);
         break;
     }
     case type::SignedData: 

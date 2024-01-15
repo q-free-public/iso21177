@@ -18,7 +18,8 @@ std::mutex m;
 bool serverReady = false;
 
 auto serverThreadFn = [](){
-    AppFullInstance appServ(std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
+    SecEnt::SecEntCommunicator secEntComm;
+    AppFullInstance appServ(secEntComm, std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
 
     appServ.configureApplication(123, BaseTypes::Role::SERVER);
     std::cerr << "====> Server now configured\n";
@@ -39,7 +40,8 @@ auto serverThreadFn = [](){
 };
 
 auto clientThreadFn = [](){
-    AppFullInstance appClient(std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
+    SecEnt::SecEntCommunicator secEntComm;
+    AppFullInstance appClient(secEntComm, std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
 
     std::unique_lock<std::mutex> lock{m};
     cond_var.wait(lock, []() { return serverReady; });
@@ -69,8 +71,9 @@ int main() {
 
     if (false){
         std::cerr << "======> Now without threads\n";
-        AppFullInstance appServ(std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
-        AppFullInstance appClient(std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
+        SecEnt::SecEntCommunicator secEntComm;
+        AppFullInstance appServ(secEntComm, std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
+        AppFullInstance appClient(secEntComm, std::make_shared<SecureSessionTLS>(SecureSessionTLS()));
 
         appServ.configureApplication(123, BaseTypes::Role::SERVER);
         std::cerr << "====> Server now configured\n";
@@ -101,8 +104,9 @@ int main() {
         appServ.waitForNetworkInput();
     }
     if (false) {
-        AppFullInstance appServ;
-        AppFullInstance appClient;
+        SecEnt::SecEntCommunicator secEntComm;
+        AppFullInstance appServ(secEntComm);
+        AppFullInstance appClient(secEntComm);
 
         appServ.configureApplication(123, BaseTypes::Role::SERVER);
         std::cerr << "====> Server now configured\n";

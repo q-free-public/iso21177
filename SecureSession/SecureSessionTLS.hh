@@ -57,7 +57,7 @@ public:
     void receiveData(const std::vector<uint8_t>& data);
     // This is called when a session is lost
     void sessionTerminated();
-    void waitForNetworkInput();
+    bool waitForNetworkInput();
 
 private:
     enum class SocketState { CREATED, BEFORE_HANDSHAKE, AFTER_HANDSHAKE, OTHER_SIDE_CLOSED, SERVER_SOCKET};
@@ -72,7 +72,6 @@ private:
     };
     std::map<key_t, sessionData> data_;
 
-    void attemptHandshake(BaseTypes::AppId appId, BaseTypes::SessionId sessId);
     void waitForData(SocketWithState sock, BaseTypes::Data& readData);
     void afterHandshake(const BaseTypes::AppId& appId, 
             const BaseTypes::SessionId& sessionId, const BaseTypes::Certificate& cert);

@@ -7,8 +7,10 @@
 #include "SecuritySubsystemAppAPI.hh"
 #include "asn1/Ieee1609Dot2Data.hh"
 #include "sec_ent_comm/sec_ent_api.hh"
+#include "asn1/ToBeSignedData.hh"
 
-SecuritySubsystem::SecuritySubsystem()
+SecuritySubsystem::SecuritySubsystem(SecEnt::SecEntCommunicator& secEntComm)
+: secEntComm_(secEntComm)
 {
 }
 
@@ -108,11 +110,18 @@ void SecuritySubsystem::AppSecDataRequest(
         const BaseTypes::SigningParameters &signingParams)
 {
     std::cerr << "SecuritySubsystem::AppSecDataRequest " << appId << "\n";
-    // TODO: Call SecEnt to sign the data
+    Asn1Helpers::Ieee1609Dot2Data signedData(std::integral_constant<Asn1Helpers::Ieee1609Dot2Data::type, Asn1Helpers::Ieee1609Dot2Data::type::NOTHING>{});
+    // Call SecEnt to sign the data
+    Asn1Helpers::ToBeSignedData tbsData(data);
+
+    SecEnt::SigningStatus signStatusInternal = secEntComm_.signData(data, cryptoHandle, signedData);
     SecuritySubsystemAppAPI::AppSecDataConfirmResult result 
         = SecuritySubsystemAppAPI::AppSecDataConfirmResult::SUCCESS;
+    if (signStatusInternal != SecEnt::SigningStatus::OK) {
+        result = SecuritySubsystemAppAPI::AppSecDataConfirmResult::FAILURE;
+    }
     call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
-        sptr->AppSecDataConfirm(result, data);
+        sptr->AppSecDataConfirm(result, signedData);
     });
 }
 
@@ -133,7 +142,7 @@ void SecuritySubsystem::AppSecIncomingRequest(
         Asn1Helpers::Ieee1609Dot2Data ieeeDot2Data(apdu);
         switch (ieeeDot2Data.getType()) {
             case Asn1Helpers::Ieee1609Dot2Data::type::SignedData: {
-                SecEnt::VerificationStatus status = SecEnt::verifyIeee1609Dot2DataSigned(ieeeDot2Data);
+                SecEnt::VerificationStatus status = secEntComm_.verifyIeee1609Dot2DataSigned(ieeeDot2Data);
                 if (status != SecEnt::VerificationStatus::OK) {
                     result = Result::INVALID_SIGNED_IEEE1609DOT2_DATA;
                     call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
