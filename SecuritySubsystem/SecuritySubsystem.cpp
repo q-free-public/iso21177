@@ -144,7 +144,8 @@ void SecuritySubsystem::AppSecIncomingRequest(
         Asn1Helpers::Ieee1609Dot2Data ieeeDot2Data(apdu);
         switch (ieeeDot2Data.getType()) {
             case Asn1Helpers::Ieee1609Dot2Data::type::SignedData: {
-                SecEnt::VerificationStatus status = secEntComm_.verifyIeee1609Dot2DataSigned(ieeeDot2Data);
+                SecEnt::VerificationStatus status =
+                    secEntComm_.verifyIeee1609Dot2DataSigned(ieeeDot2Data);
                 if (status != SecEnt::VerificationStatus::OK) {
                     result = Result::INVALID_SIGNED_IEEE1609DOT2_DATA;
                     call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
@@ -166,7 +167,8 @@ void SecuritySubsystem::AppSecIncomingRequest(
     if (result == Result::SUCCESS) {
         // TODO: apply the access control policy
     }
-   call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
+   call_function_wptr(appSecuritySubsystemAPI, 
+   [&](std::shared_ptr<AppSecuritySubsystemAPI> sptr) {
         sptr->AppSecIncomingConfirm(result);
    });
 }

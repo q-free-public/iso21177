@@ -2,6 +2,7 @@
 
 #include "ApplicationElementI.hh"
 #include "BaseTypes.hh"
+#include <future>
 
 class ApplicationTLS : public ApplicationElementI {
 public:
@@ -78,4 +79,5 @@ private:
             BaseTypes::CryptomaterialHandle cryptoHandle);
     };
     std::shared_ptr<data_t> data_;
+    std::promise<SecuritySubsystemAppAPI::AppSecIncomingConfirmResult> apduVerifyPromise_;
 };

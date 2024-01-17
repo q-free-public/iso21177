@@ -188,14 +188,16 @@ bool SecureSession::waitForNetworkInput()
             BaseTypes::Data data;
             waitForData(it->second.socket, data);
             if (data.size() > 0) {
-                call_function_wptr(alSecureSessionAPI, [&](auto sptr) {
+                call_function_wptr(alSecureSessionAPI, 
+                [&](std::shared_ptr<ALSecureSessionAPI> sptr) {
                     sptr->ALSessDataIndication(it->first.first, it->first.second, data);
                 });
             }
             if (data.size() == 0) {
                 std::cerr << "Socket is closed on the other side\n";
 
-                call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
+                call_function_wptr(secSubSecureSessionAPI, 
+                [&](std::shared_ptr<SecSubSecureSessionAPI> sptr) {
                     sptr->SecSessEndSessionIndication(it->first.first, it->first.second);
                 });
             };
@@ -220,7 +222,8 @@ bool SecureSession::waitForNetworkInput()
             auto sockWithStatePtr = it->second.clientSockets.begin();
             waitForData(*sockWithStatePtr, data);
             if (data.size() > 0) {
-                call_function_wptr(alSecureSessionAPI, [&](auto sptr) {
+                call_function_wptr(alSecureSessionAPI, 
+                [&](std::shared_ptr<ALSecureSessionAPI> sptr) {
                     sptr->ALSessDataIndication(it->first.first, it->first.second, data);
                 });
             }

@@ -17,10 +17,15 @@ SecEntCommunicator::SecEntCommunicator(const std::string address, int port)
 
 VerificationStatus SecEntCommunicator::verifyIeee1609Dot2DataSigned(const Asn1Helpers::Ieee1609Dot2Data &data)
 {
-    std::cerr << "Attempting uimplemented verifyIeee1609Dot2DataSigned \n";
-    // TODO: implement
-    std::vector<uint8_t> data_to_send_for_verification = data.getEncodedBuffer();
-    return VerificationStatus::OK;
+    sec_ent_msg_verify_req req(data);
+    try {
+        sec_ent_msg_verify_reply repl = send_recv<sec_ent_msg_verify_reply>(comm_.get_sock(), req);
+        return VerificationStatus::OK;
+    } catch (const std::exception& e) {
+        std::cerr << "signing failed: " << e.what() << "\n";
+    }
+    return VerificationStatus::FAILED;
+
 }
 
 SigningStatus SecEntCommunicator::signData(

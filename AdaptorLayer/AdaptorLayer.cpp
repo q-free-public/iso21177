@@ -55,7 +55,8 @@ void AdaptorLayer::ALSessDataIndication(
             break;
         // 3. APDU : Application data
         case Asn1Helpers::AdaptorLayerPdu::type::APDU:
-            call_function_wptr(appALAPI, [&](auto sptr) {
+            call_function_wptr(appALAPI, 
+            [&](std::shared_ptr<AppAdaptorLayerAPI> sptr) {
                 sptr->AppALDataIndication(appId, sessionId, alPdu.getPayload());
             });
             break;

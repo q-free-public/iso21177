@@ -96,6 +96,27 @@ private:
     Asn1Helpers::Ieee1609Dot2Data signed_data;
 };
 
+class sec_ent_msg_verify_req {
+public:
+    sec_ent_msg_verify_req(const Asn1Helpers::Ieee1609Dot2Data& signed_data);
+    static sec_ent_msg_verify_req parse_payload(const std::vector<uint8_t> payload);
+    virtual std::vector<uint8_t> serialize_payload() const;
+    static constexpr uint8_t type() { return SEC_ENT_MSG_TYPE_VERIFY_DATA; };
+    const Asn1Helpers::Ieee1609Dot2Data& getSignedData();
+private:
+    Asn1Helpers::Ieee1609Dot2Data signed_data;   
+};
+
+class sec_ent_msg_verify_reply {
+public:
+    sec_ent_msg_verify_reply(const std::vector<uint8_t>& signed_payload);
+    static sec_ent_msg_verify_reply parse_payload(const std::vector<uint8_t> payload);
+    static constexpr uint8_t type() { return SEC_ENT_MSG_TYPE_VERIFY_DATA; };
+    const std::vector<uint8_t>& getSignedPayload();
+private:
+    std::vector<uint8_t> signed_payload;
+};
+
 class sec_ent_get_at_req {
 public:
     sec_ent_get_at_req() = default;

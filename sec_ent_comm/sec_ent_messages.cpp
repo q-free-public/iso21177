@@ -1,5 +1,6 @@
 #include "sec_ent_messages.hh"
 #include "BaseTypes.hh"
+#include "asn1/OctetString.hh"
 
 sec_ent_msg::sec_ent_msg(uint8_t msg_type, uint32_t msg_len, const std::vector<uint8_t>& payload)
 : msg_type(msg_type)
@@ -133,4 +134,40 @@ sec_ent_get_at_reply sec_ent_get_at_reply::parse_payload(const std::vector<uint8
 const BaseTypes::HashedId8 &sec_ent_get_at_reply::getATHash()
 {
     return at_hash_;
+}
+
+sec_ent_msg_verify_req::sec_ent_msg_verify_req(const Asn1Helpers::Ieee1609Dot2Data &signed_data)
+: signed_data(signed_data)
+{
+}
+
+sec_ent_msg_verify_req sec_ent_msg_verify_req::parse_payload(const std::vector<uint8_t> payload)
+{
+    return sec_ent_msg_verify_req(Asn1Helpers::Ieee1609Dot2Data(payload));
+}
+
+std::vector<uint8_t> sec_ent_msg_verify_req::serialize_payload() const
+{
+    return signed_data.getEncodedBuffer();
+}
+
+const Asn1Helpers::Ieee1609Dot2Data &sec_ent_msg_verify_req::getSignedData()
+{
+    return signed_data;
+}
+
+sec_ent_msg_verify_reply::sec_ent_msg_verify_reply(const std::vector<uint8_t> &signed_payload)
+: signed_payload(signed_payload)
+{
+}
+
+sec_ent_msg_verify_reply sec_ent_msg_verify_reply::parse_payload(const std::vector<uint8_t> payload)
+{
+    Asn1Helpers::OctetString str(std::integral_constant<Asn1Helpers::OctetString::type, Asn1Helpers::OctetString::type::DATA>{}, payload);
+    return sec_ent_msg_verify_reply(str.getPayload());
+}
+
+const std::vector<uint8_t> &sec_ent_msg_verify_reply::getSignedPayload()
+{
+    return signed_payload;
 }

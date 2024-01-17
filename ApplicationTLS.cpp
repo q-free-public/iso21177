@@ -51,15 +51,27 @@ void ApplicationTLS::AppALDataIndication(const BaseTypes::AppId &appId,
     
     std::cerr << "!!ApplicationTLS::AppALDataIndication: local session info " << appId << " " << sessionId << "\n";
     std::cerr << "Application data received\n";
+    BaseTypes::SignedDataVerificationParams params;
     Asn1Helpers::APDU apdu_parsed(data);
+    // perform pre-processing if necessary
     Asn1Helpers::Ieee1609Dot2Data data_parsed(apdu_parsed.getPayload());
     data_parsed.debugPrint();
+
+    std::future<SecuritySubsystemAppAPI::AppSecIncomingConfirmResult> future = apduVerifyPromise_.get_future();
+    call_function_wptr(this->secSubsystemAppAPI, 
+    [&](std::shared_ptr<SecuritySubsystemAppAPI> sptr) {
+        sptr->AppSecIncomingRequest(appId, sessionId, data_parsed.getEncodedBuffer(), true, params);
+    });
+    auto result = future.get();
     std::vector<uint8_t> data_payload = data_parsed.getPayload();
-    std::cerr << "payload " << hex_string(data_payload) << "\n";
+    std::cerr << "Verification : " << static_cast<int>(result) << " payload " << hex_string(data_payload) << "\n";
 }
 
-void ApplicationTLS::AppSecIncomingConfirm(SecuritySubsystemAppAPI::AppSecIncomingConfirmResult)
+void ApplicationTLS::AppSecIncomingConfirm(
+    SecuritySubsystemAppAPI::AppSecIncomingConfirmResult result)
 {
+    std::cerr << "!ApplicationTLS::AppSecIncomingConfirm " << static_cast<int>(result) << "\n";
+    apduVerifyPromise_.set_value(result);
 }
 
 void ApplicationTLS::AppSecEndSessionIndication(const BaseTypes::AppId &appId, const BaseTypes::SessionId &secureSessionId, BaseTypes::EnumeratedSecLayer originatingLayer)

@@ -55,6 +55,8 @@ template
 sec_ent_msg_sign_reply send_recv(reconnecting_socket& socket, const sec_ent_msg_sign_req& req);
 template
 sec_ent_get_at_reply send_recv(reconnecting_socket& socket, const sec_ent_get_at_req& req);
+template
+sec_ent_msg_verify_reply send_recv(reconnecting_socket& socket, const sec_ent_msg_verify_req& req);
 
 
 
