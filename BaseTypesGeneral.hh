@@ -40,6 +40,7 @@ namespace BaseTypes {
     typedef std::vector<uint8_t> Certificate;
     typedef Asn1Helpers::Ieee1609Dot2Data SignedData;
     typedef std::vector<uint8_t> SignedDataVerificationParams;
+    typedef uint64_t Time32;
 
 
     struct CredentialBasedAuthState {

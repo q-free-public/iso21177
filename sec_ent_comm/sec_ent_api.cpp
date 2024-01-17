@@ -28,17 +28,19 @@ SigningStatus SecEntCommunicator::signData(
         BaseTypes::CryptomaterialHandle cryptoHandle,
         Asn1Helpers::Ieee1609Dot2Data& signed_data)
 {
-    std::cerr << "Attempting uimplemented signData \n";
     using SignerId = Asn1Helpers::SignerIdentifier;
     SignerId signer(std::integral_constant<SignerId::type, SignerId::type::DIGEST>{}, cryptoHandle);
-    signer.debugPrint();
     sec_ent_msg_sign_req req(signer, tbsData.getEncodedBuffer());
 
-    sec_ent_msg_sign_reply repl = send_recv<sec_ent_msg_sign_reply>(comm_.get_sock(), req);
-    signed_data = repl.getSignedData();
-    signed_data.debugPrint();
-
+    try {
+        sec_ent_msg_sign_reply repl = send_recv<sec_ent_msg_sign_reply>(comm_.get_sock(), req);
+        signed_data = repl.getSignedData();
+        return SigningStatus::OK;
+    } catch (const std::exception& e) {
+        std::cerr << "signing failed: " << e.what() << "\n";
+    }
     return SigningStatus::FAILED;
+
 }
 
 BaseTypes::CryptomaterialHandle SecEntCommunicator::getCurrentATCert()

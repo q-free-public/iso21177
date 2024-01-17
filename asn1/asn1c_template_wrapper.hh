@@ -10,6 +10,7 @@
 template <class T>
 class asn1c_wrapper {
 public:
+    typedef T ASN1C_TYPE;
     asn1c_wrapper(asn_TYPE_descriptor_t * def) 
     : asn1c_def_(def) {
         if (def == nullptr) {
@@ -50,9 +51,18 @@ public:
         return ret;
     }
 
+
     void debugPrint() const {
         xer_fprint(stdout, asn1c_def_, data_.get());
     }
+
+    template <class ELEM_T>
+    void setElement(typename ELEM_T::ASN1C_TYPE * destElem, ELEM_T&& value) {
+        typename ELEM_T::ASN1C_TYPE * ptr = value.releaseAsn1cData();
+        memcpy(destElem, ptr, sizeof(typename ELEM_T::ASN1C_TYPE));
+        free(ptr);
+    };
+
 private:
     void parseFromBuff(const std::vector<uint8_t>& data) {
         if (asn1c_def_ == nullptr) {
@@ -66,6 +76,13 @@ private:
                 "\n" + hex_string(data));
         }
     }
+
+    T* releaseAsn1cData() {
+        return data_.release();
+    }
+
+    template <class X>
+    friend class asn1c_wrapper;
 
 protected:
     std::unique_ptr<T> data_;

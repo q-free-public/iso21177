@@ -12,7 +12,9 @@ namespace Asn1Helpers {
 class HeaderInfo : public 
     asn1c_wrapper<HeaderInfo_t> {
 public:
-    HeaderInfo(const std::vector<uint8_t> &data);
+    HeaderInfo(BaseTypes::AID psid);
+    HeaderInfo(BaseTypes::AID psid, BaseTypes::Time32 generationTime);
+    HeaderInfo(const std::vector<uint8_t>& data);
 };
 
 } // namespace Asn1Helpers

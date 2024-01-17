@@ -8,8 +8,8 @@ void AdaptorLayer::AppALDataRequest(
     const BaseTypes::SessionId &sessionId,
     const BaseTypes::Data &data)
 {
-    std::cerr << "AdaptorLayer::AppALDataRequest " << appId <<"\n";
-    call_function_wptr(appALAPI, [](auto sptr) {
+    std::cerr << "AdaptorLayer::AppALDataRequest AppId" << appId  << " SessionId " << sessionId <<"\n";
+    call_function_wptr(appALAPI, [](std::shared_ptr<AppAdaptorLayerAPI> sptr) {
         sptr->AppALDataConfirm();
     });
     // Add Session non-repudiation (not supported in current standard)
@@ -19,15 +19,13 @@ void AdaptorLayer::AppALDataRequest(
                 Asn1Helpers::AdaptorLayerPdu::type,
                 Asn1Helpers::AdaptorLayerPdu::type::APDU
             >(), data);
-    if (auto sptr = secSessALAPI.lock()) {
+    call_function_wptr(secSessALAPI, [&](std::shared_ptr<SecureSessionALAPI> sptr ) {
         sptr->ALSessDataRequest(
             appId,
             sessionId,
             alPdu.getEncodedBuffer()
         );
-    } else {
-        std::cerr << "!!!!!!! unable to lock secSess API !!!\n";
-    }
+    });
 }
 
 void AdaptorLayer::ALSessDataConfirm()

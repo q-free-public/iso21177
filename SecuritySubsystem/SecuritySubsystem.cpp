@@ -112,15 +112,17 @@ void SecuritySubsystem::AppSecDataRequest(
     std::cerr << "SecuritySubsystem::AppSecDataRequest " << appId << "\n";
     Asn1Helpers::Ieee1609Dot2Data signedData(std::integral_constant<Asn1Helpers::Ieee1609Dot2Data::type, Asn1Helpers::Ieee1609Dot2Data::type::NOTHING>{});
     // Call SecEnt to sign the data
-    Asn1Helpers::ToBeSignedData tbsData(data);
+    BaseTypes::Time32 genTime = 0xFFFFFF;
+    Asn1Helpers::HeaderInfo hdrInfo(appId, genTime);
+    Asn1Helpers::ToBeSignedData tbsData(std::move(hdrInfo), data);
 
-    SecEnt::SigningStatus signStatusInternal = secEntComm_.signData(data, cryptoHandle, signedData);
+    SecEnt::SigningStatus signStatusInternal = secEntComm_.signData(tbsData, cryptoHandle, signedData);
     SecuritySubsystemAppAPI::AppSecDataConfirmResult result 
         = SecuritySubsystemAppAPI::AppSecDataConfirmResult::SUCCESS;
     if (signStatusInternal != SecEnt::SigningStatus::OK) {
         result = SecuritySubsystemAppAPI::AppSecDataConfirmResult::FAILURE;
     }
-    call_function_wptr(appSecuritySubsystemAPI, [&](auto sptr) {
+    call_function_wptr(appSecuritySubsystemAPI, [&](std::shared_ptr<AppSecuritySubsystemAPI> sptr) {
         sptr->AppSecDataConfirm(result, signedData);
     });
 }
