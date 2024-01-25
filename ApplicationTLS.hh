@@ -56,7 +56,8 @@ public:
     );
     void sendDataUnsecured(const BaseTypes::Data& data);
     void sendDataSecured(const BaseTypes::Data& data);
-    
+    typedef std::function<void(const std::vector<uint8_t>&, SecuritySubsystemAppAPI::AppSecIncomingConfirmResult)> DataRecvCb_t;
+    void registerDataReceivedCallback(DataRecvCb_t dataRecvCb);
 
 
     void executeWithSecAPI(std::function<void(SecuritySubsystemAppAPI&)>);
@@ -79,5 +80,6 @@ private:
             BaseTypes::CryptomaterialHandle cryptoHandle);
     };
     std::shared_ptr<data_t> data_;
+    DataRecvCb_t dataRecvCallbackFn;
     std::promise<SecuritySubsystemAppAPI::AppSecIncomingConfirmResult> apduVerifyPromise_;
 };

@@ -6,7 +6,6 @@
 #include "SecureSession/SecureSessionTLS.hh"
 #include "option_parsing/option_parsing.hh"
 
-
 int main(int argc, const char *argv[]) {
     OptionParsing options;
     bool parsed = options.parseOptions(argc, argv);
@@ -47,6 +46,13 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
     // appClient.configureApplication(456, BaseTypes::Role::CLIENT);
+    auto dataRecvCbFn = [](const std::vector<uint8_t>& data, SecuritySubsystemAppAPI::AppSecIncomingConfirmResult result) {
+        std::cerr << "Data Received callback \n";
+        Asn1Helpers::Ieee1609Dot2Data parsed_data(data);
+        parsed_data.debugPrint();
+        std::cerr << hex_string(parsed_data.getPayload()) << "\n";
+    };
+    appTls->registerDataReceivedCallback(dataRecvCbFn);
     // Now client sends data
     std::cerr << "=> Type data to send, type exit to quit\n";
     std::cerr << "=> if 1st character is 1, the non-repudiation is applied (signing), otherwise not\n";

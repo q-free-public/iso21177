@@ -34,7 +34,7 @@ public:
         BaseTypes::Role role);
 
     void waitForNetworkInput();
-    void sendData(BaseTypes::Data& data);
+    void sendData(BaseTypes::Data& data, bool send_secure = false);
     void forceEndSession();
     void closeSocket();
 private:

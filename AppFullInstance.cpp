@@ -119,25 +119,32 @@ void AppFullInstance::waitForNetworkInput()
     secureSession->waitForNetworkInput();
 }
 
-void AppFullInstance::sendData(BaseTypes::Data &data)
+void AppFullInstance::sendData(BaseTypes::Data &data, bool send_secure)
 {
     if (!this->data_) {
         std::cerr << "AppFullInstance not initialized\n";
         return;
     }
-    // Sending without signing
-    // TODO: it may be necessary to sign data
-    std::vector<uint8_t> data_encap = Asn1Helpers::Ieee1609Dot2Data(
-        std::integral_constant<
-            Asn1Helpers::Ieee1609Dot2Data::type, 
-            Asn1Helpers::Ieee1609Dot2Data::type::UnsecuredData
-        >(), data).getEncodedBuffer();
-    call_function_wptr(appEx->aLAppAPI, [&](std::shared_ptr<AdaptorLayerAppAPI> sptr) {
-        sptr->AppALDataRequest(
-            this->data_->appId,
-            this->data_->sessionId,
-            data_encap);
-    });
+    if (send_secure) {
+        BaseTypes::SigningParameters signParams = "no-params";
+        call_function_wptr(appEx->secSubsystemAppAPI, [&](std::shared_ptr<SecuritySubsystemAppAPI> sptr) {
+            sptr->AppSecDataRequest(this->data_->appId, this->data_->sessionId, this->data_->cryptoHandle,
+                    data, signParams);
+        });
+    } else {
+        // Sending without signing
+        std::vector<uint8_t> data_encap = Asn1Helpers::Ieee1609Dot2Data(
+            std::integral_constant<
+                Asn1Helpers::Ieee1609Dot2Data::type, 
+                Asn1Helpers::Ieee1609Dot2Data::type::UnsecuredData
+            >(), data).getEncodedBuffer();
+        call_function_wptr(appEx->aLAppAPI, [&](std::shared_ptr<AdaptorLayerAppAPI> sptr) {
+            sptr->AppALDataRequest(
+                this->data_->appId,
+                this->data_->sessionId,
+                data_encap);
+        });
+    }
 }
 
 void AppFullInstance::forceEndSession()

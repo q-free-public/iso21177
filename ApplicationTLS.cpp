@@ -57,6 +57,7 @@ void ApplicationTLS::AppALDataIndication(const BaseTypes::AppId &appId,
     Asn1Helpers::Ieee1609Dot2Data data_parsed(apdu_parsed.getPayload());
     data_parsed.debugPrint();
 
+    apduVerifyPromise_ = std::promise<SecuritySubsystemAppAPI::AppSecIncomingConfirmResult>{};
     std::future<SecuritySubsystemAppAPI::AppSecIncomingConfirmResult> future = apduVerifyPromise_.get_future();
     call_function_wptr(this->secSubsystemAppAPI, 
     [&](std::shared_ptr<SecuritySubsystemAppAPI> sptr) {
@@ -65,6 +66,9 @@ void ApplicationTLS::AppALDataIndication(const BaseTypes::AppId &appId,
     auto result = future.get();
     std::vector<uint8_t> data_payload = data_parsed.getPayload();
     std::cerr << "Verification : " << static_cast<int>(result) << " payload " << hex_string(data_payload) << "\n";
+    if (dataRecvCallbackFn) {
+        dataRecvCallbackFn(apdu_parsed.getPayload(), result);
+    }
 }
 
 void ApplicationTLS::AppSecIncomingConfirm(
@@ -150,6 +154,11 @@ void ApplicationTLS::sendDataSecured(const BaseTypes::Data &data)
         sptr->AppSecDataRequest(this->data_->appId, this->data_->sessionId, this->data_->cryptoHandle,
                 data, signParams);
     });
+}
+
+void ApplicationTLS::registerDataReceivedCallback(DataRecvCb_t dataRecvCb)
+{
+    dataRecvCallbackFn = dataRecvCb;
 }
 
 ApplicationTLS::data_t::data_t(BaseTypes::Role role, BaseTypes::Socket sock, BaseTypes::AppId appId, BaseTypes::SessionId sessionId, BaseTypes::CryptomaterialHandle cryptoHandle)

@@ -64,12 +64,15 @@ const std::vector<uint8_t> Ieee1609Dot2Data::getPayload() const
     case type::SignedData: 
     {
         std::array<uint8_t, 65535> buffer;
-        asn_enc_rval_t rval = oer_encode_to_buffer(&asn_DEF_SignedData, nullptr,
-            data_->content->choice.signedData, buffer.data(), buffer.size());
+        //TODO: how to process external payload here?
+        asn_enc_rval_t rval = oer_encode_to_buffer(&asn_DEF_Ieee1609Dot2Data, nullptr,
+            data_->content->choice.signedData->tbsData->payload->data, buffer.data(), buffer.size());
         if (rval.encoded < 0) {
             return ret;
         }
         ret.assign(buffer.begin(), buffer.begin() + rval.encoded);
+        Ieee1609Dot2Data payloadData(ret);
+        ret = payloadData.getPayload();
         break;
     }
     //TODO: implement other types here
