@@ -13,6 +13,18 @@ SecEntCommunicator::SecEntCommunicator(const std::string address, int port)
 , port_(port)
 , comm_(address, port)
 {
+    boost::asio::io_service io_service;
+    boost::asio::ip::tcp::resolver resolver(io_service);
+    boost::asio::ip::tcp::resolver::query query(address, "");
+    for(boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query);
+                            i != boost::asio::ip::tcp::resolver::iterator();
+                            ++i)
+    {
+        boost::asio::ip::tcp::endpoint end = *i;
+        address_ = end.address().to_string();
+        // convert address to IP because calls to SSL_set_1609_sec_ent_addr require IP addr
+        break;
+    }
 }
 
 VerificationStatus SecEntCommunicator::verifyIeee1609Dot2DataSigned(const Asn1Helpers::Ieee1609Dot2Data &data)
@@ -55,6 +67,16 @@ BaseTypes::CryptomaterialHandle SecEntCommunicator::getCurrentATCert()
     sec_ent_get_at_reply repl = send_recv<sec_ent_get_at_reply>(comm_.get_sock(), req);
     
     return BaseTypes::CryptomaterialHandle(repl.getATHash());
+}
+
+int SecEntCommunicator::getPort()
+{
+    return port_;
+}
+
+std::string SecEntCommunicator::getHost()
+{
+    return address_;
 }
 
 } // namespace SecEnt

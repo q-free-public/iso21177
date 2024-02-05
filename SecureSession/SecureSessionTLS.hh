@@ -9,10 +9,12 @@
 
 #include "Sockets/SocketTLS.hh"
 
+#include "sec_ent_comm/sec_ent_api.hh"
+
 class SecureSessionTLS : 
         public SecureSession {
 public:
-    SecureSessionTLS();
+    SecureSessionTLS(SecEnt::SecEntCommunicator& comm);
 
     virtual void SecSessConfigureRequest(
         const BaseTypes::AppId& appId,
@@ -73,6 +75,7 @@ private:
 
     };
     std::map<key_t, sessionData> data_;
+    SecEnt::SecEntCommunicator& sec_ent_comm_;
 
     void waitForData(SocketWithState sock, BaseTypes::Data& readData);
     void afterHandshake(const BaseTypes::AppId& appId, 

@@ -24,6 +24,8 @@ namespace SecEnt {
             BaseTypes::CryptomaterialHandle cryptoHandle,
             Asn1Helpers::Ieee1609Dot2Data& signed_data);
         BaseTypes::CryptomaterialHandle getCurrentATCert();
+        int getPort();
+        std::string getHost();
     private:
         std::string address_;
         int port_;

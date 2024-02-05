@@ -11,8 +11,8 @@
 #include "Sockets/SocketServerTLS.hh"
 #include "Sockets/SocketClientTLS.hh"
 
-SecureSessionTLS::SecureSessionTLS()
-{
+SecureSessionTLS::SecureSessionTLS(SecEnt::SecEntCommunicator &comm)
+: sec_ent_comm_(comm) {
 }
 
 void SecureSessionTLS::SecSessConfigureRequest(
@@ -21,7 +21,7 @@ void SecureSessionTLS::SecSessConfigureRequest(
         BaseTypes::SessionType sessionType, bool proxied,
         const BaseTypes::SessionId &sessionId,
         BaseTypes::TransportMechanismType transportMechanismType,
-        const BaseTypes::CryptomaterialHandle &cryptomaterialHandle,
+        const BaseTypes::CryptomaterialHandle& cryptomaterialHandle,
         const BaseTypes::CertPermissionsPattern &certPermPattern,
         BaseTypes::TimePeriod inactivityTimeout,
         BaseTypes::TimePeriod sessionTimeout,
@@ -41,7 +41,7 @@ void SecureSessionTLS::SecSessConfigureRequest(
         data.role = role;
         key_t key(appId, sessionId);
         if (role == BaseTypes::Role::CLIENT) {
-            auto socketTLS_ptr = std::make_shared<SocketClientTLS>(socket, appId, cryptomaterialHandle);
+            auto socketTLS_ptr = std::make_shared<SocketClientTLS>(socket, sec_ent_comm_.getHost(), sec_ent_comm_.getPort(), appId, cryptomaterialHandle);
             data.socket = SocketWithState(socketTLS_ptr, SocketState::CREATED);
             data.socket.second = SocketState::BEFORE_HANDSHAKE;
             data.socket.first->connectToServer();
@@ -56,7 +56,7 @@ void SecureSessionTLS::SecSessConfigureRequest(
             data.socket.second = SocketState::AFTER_HANDSHAKE;
         }
         if (role == BaseTypes::Role::SERVER) {
-            auto socketTLS_ptr = std::make_shared<SocketServerTLS>(socket, appId, cryptomaterialHandle);
+            auto socketTLS_ptr = std::make_shared<SocketServerTLS>(socket, sec_ent_comm_.getHost(), sec_ent_comm_.getPort(), appId, cryptomaterialHandle);
             data.socket = SocketWithState(socketTLS_ptr, SocketState::SERVER_SOCKET);
             data.socket.second = SocketState::SERVER_SOCKET;
         }
@@ -66,6 +66,8 @@ void SecureSessionTLS::SecSessConfigureRequest(
         sptr->SecSessConfigureConfirm();
     });
 }
+
+
 
 void SecureSessionTLS::ALSessDataRequest(
     const BaseTypes::AppId &appId,

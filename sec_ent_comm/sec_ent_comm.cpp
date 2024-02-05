@@ -3,7 +3,6 @@
 #include "reconnecting_socket.hh"
 #include "sec_ent_messages.hh"
 #include "sec_ent_comm.hh"
-#include "../SecEntData.hh"
 
 template<class Tret, class Treq>
 Tret send_recv(reconnecting_socket& socket, const Treq& req) {

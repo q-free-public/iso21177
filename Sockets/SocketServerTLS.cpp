@@ -3,11 +3,11 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#include "SecEntData.hh"
 #define CERT_HASH_LEN 8
 
-SocketServerTLS::SocketServerTLS(std::shared_ptr<Socket> s, const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle)
-: SocketTLS(s)
+SocketServerTLS::SocketServerTLS(std::shared_ptr<Socket> s, const std::string& host, int port,
+        const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle)
+: SocketTLS(s, host, port)
 , appId_(appId)
 , cryptoHandle_(clientHandle)
 {
@@ -24,14 +24,14 @@ std::unique_ptr<Socket> SocketServerTLS::acceptClientConnection()
 {
     auto connectedSocket = SocketTLS::acceptClientConnection();
     std::cerr << "SocketServerTLS::acceptClientConnection " << connectedSocket->getFd() << "\n";
-    return std::make_unique<SocketServerTLS>(std::move(connectedSocket), appId_, cryptoHandle_);
+    return std::make_unique<SocketServerTLS>(std::move(connectedSocket), this->sec_ent_host_, this->sec_ent_port_, appId_, cryptoHandle_);
 }
 
 std::unique_ptr<SocketTLS> SocketServerTLS::acceptClientConnectionTLS()
 {
     auto connectedSocket = SocketTLS::acceptClientConnection();
     std::cerr << "SocketServerTLS::acceptClientConnection " << connectedSocket->getFd() << "\n";
-    return std::make_unique<SocketServerTLS>(std::move(connectedSocket), appId_, cryptoHandle_);
+    return std::make_unique<SocketServerTLS>(std::move(connectedSocket), this->sec_ent_host_, this->sec_ent_port_, appId_, cryptoHandle_);
 }
 
 void SocketServerTLS::connectToServer()

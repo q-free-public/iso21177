@@ -21,7 +21,7 @@ int main(int argc, const char *argv[]) {
 
     SecEnt::SecEntCommunicator secEntComm(options.getSecEntHost(), options.getSecEntPort());
     std::shared_ptr<ApplicationTLS> appTls = std::make_shared<ApplicationTLS>();
-    std::shared_ptr<SecureSessionTLS> secSess = std::make_shared<SecureSessionTLS>();
+    std::shared_ptr<SecureSessionTLS> secSess = std::make_shared<SecureSessionTLS>(secEntComm);
     std::shared_ptr<SecuritySubsystem> secSub = std::make_shared<SecuritySubsystem>(secEntComm);
     std::shared_ptr<AdaptorLayer> adaptorLayer = std::make_shared<AdaptorLayer>();
 

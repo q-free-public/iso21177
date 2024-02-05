@@ -12,7 +12,8 @@
 
 class SocketServerTLS : public SocketTLS {
 public:
-    SocketServerTLS(std::shared_ptr<Socket> s, const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle);
+    SocketServerTLS(std::shared_ptr<Socket> s, const std::string& host, int port,
+        const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle);
     ~SocketServerTLS();
     virtual std::unique_ptr<Socket> acceptClientConnection();
     virtual std::unique_ptr<SocketTLS> acceptClientConnectionTLS();

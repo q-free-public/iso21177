@@ -20,10 +20,11 @@ int main(int argc, const char *argv[]) {
         return 0;
     }
 
-    std::shared_ptr<ApplicationTLS> appTls = std::make_shared<ApplicationTLS>();
-    std::shared_ptr<SecureSessionTLS> secSess = std::make_shared<SecureSessionTLS>();
-
     SecEnt::SecEntCommunicator secEntComm(options.getSecEntHost(), options.getSecEntPort());
+
+    std::shared_ptr<ApplicationTLS> appTls = std::make_shared<ApplicationTLS>();
+    std::shared_ptr<SecureSessionTLS> secSess = std::make_shared<SecureSessionTLS>(secEntComm);
+
     BaseTypes::CryptomaterialHandle cryptoHandle = BaseTypes::CryptomaterialHandle(parse_hex_array<8>(options.getRfc8902Cert()));
     if (options.getRfc8902UseAT()) {
         std::cerr << "Using AT for RFC8902 cert\n";

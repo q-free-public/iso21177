@@ -2,17 +2,17 @@
 
 #include <iostream>
 
-#include "SecEntData.hh"
-
 #define CERT_HASH_LEN 8
 bool set_cert_psid = false;
 uint64_t __1609dot2_psid = 623;
 
-SocketTLS::SocketTLS(std::shared_ptr<Socket> s)
+SocketTLS::SocketTLS(std::shared_ptr<Socket> s, const std::string& host, int port)
 : Socket(*s.get())
 , ssl_ctx_(type_)
 , ssl_()
 , socketBase_(s)
+, sec_ent_host_(host)
+, sec_ent_port_(port)
 {
 }
 
@@ -97,7 +97,8 @@ bool SocketTLS::attemptHandshake(const BaseTypes::AppId &appId, const BaseTypes:
         fprintf(stderr, "SSL_new failed\n");
         return false;
     }
-    if (!SSL_set_1609_sec_ent_addr(*ssl_, SecEntData::sec_ent_port, SecEntData::sec_ent_ip)) {
+    std::cerr << "sec ent addr " << sec_ent_host_ << " : " << sec_ent_port_ << "\n";
+    if (!SSL_set_1609_sec_ent_addr(*ssl_, sec_ent_port_, sec_ent_host_.c_str())) {
         fprintf(stderr, "SSL_set_1609_sec_ent_addr failed\n");
         ERR_print_errors_fp(stderr);
         return false;

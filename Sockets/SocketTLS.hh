@@ -12,7 +12,7 @@
 
 class SocketTLS : public Socket {
 public:
-    SocketTLS(std::shared_ptr<Socket> s);
+    SocketTLS(std::shared_ptr<Socket> s, const std::string& host, int port);
     ~SocketTLS();
     virtual std::unique_ptr<Socket> acceptClientConnection();
     virtual std::unique_ptr<SocketTLS> acceptClientConnectionTLS() = 0;
@@ -35,6 +35,9 @@ protected:
     SSL_Wrapper ssl_;
     std::shared_ptr<BaseTypes::Certificate> peerCert_;
     std::shared_ptr<BaseTypes::CredentialBasedAuthState> peerAuthState_;
+    int sec_ent_port_;
+    std::string sec_ent_host_;
+    
 private:
     std::shared_ptr<Socket> socketBase_;
     std::unique_ptr<int> x_;
