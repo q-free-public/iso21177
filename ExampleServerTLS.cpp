@@ -41,18 +41,24 @@ int main(int argc, const char *argv[]) {
     BaseTypes::AppId appId = options.getRfc8902AID();
     appTls->configureApp(options.getAppPort(), sessionId, role, appId, cryptoHandle);
     std::cerr << "App configured\n";
+    BaseTypes::HashedId8 signingCert = cryptoHandle;
+    if (options.getMessageSigningCert().size() != 0) {
+        signingCert = (parse_hex_array<8>(options.getMessageSigningCert()));
+    }
     auto dataRecvCbFn = [&](const std::vector<uint8_t>& data, SecuritySubsystemAppAPI::AppSecIncomingConfirmResult result) {
         std::cerr << "Data Received callback \n";
         Asn1Helpers::Ieee1609Dot2Data parsed_data(data);
         parsed_data.debugPrint();
         std::cerr << hex_string(parsed_data.getPayload()) << "\n";
         std::cerr << "====> Server will send out data\n";
+        
+        BaseTypes::SigningParameters signParams = {options.getMessageSigningAID(), signingCert};
         switch (parsed_data.getType()) {
             case Asn1Helpers::Ieee1609Dot2Data::type::UnsecuredData:
                 appTls->sendDataUnsecured(parsed_data.getPayload());
                 break;
             case Asn1Helpers::Ieee1609Dot2Data::type::SignedData:
-                appTls->sendDataSecured(parsed_data.getPayload());
+                appTls->sendDataSecured(parsed_data.getPayload(), signParams);
                 break;
             default:
                 break;
@@ -60,7 +66,6 @@ int main(int argc, const char *argv[]) {
         
     };
     appTls->registerDataReceivedCallback(dataRecvCbFn);
-    //appServ.configureApplication(123, BaseTypes::Role::SERVER);
     while (true) {
         std::cerr << "====> Server will wait for incoming sessions\n";
         if (!secSess->waitForNetworkInput()) {
@@ -74,10 +79,6 @@ int main(int argc, const char *argv[]) {
                 std::cerr << "client disconnected\n";
                 break;
             }
-
-            std::cerr << "====> Server will send out data\n";
-            // BaseTypes::Data serverMessage = {0xAA, 0xBB, 0xCC, 0xDD};
-            // appTls->sendDataUnsecured(serverMessage);
         }
     }
 }

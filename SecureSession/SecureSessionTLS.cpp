@@ -45,10 +45,13 @@ void SecureSessionTLS::SecSessConfigureRequest(
             data.socket = SocketWithState(socketTLS_ptr, SocketState::CREATED);
             data.socket.second = SocketState::BEFORE_HANDSHAKE;
             data.socket.first->connectToServer();
-            if (!data.socket.first->attemptHandshakeAsClient(appId, cryptomaterialHandle)) {
-                std::cerr << "attemptHandshakeAsClient failed\n";
+            if (!data.socket.first->attemptHandshake(appId, cryptomaterialHandle)) {
+                std::cerr << "attemptHandshake failed\n";
                 //TODO: set proper socketState
-                throw std::runtime_error("attemptHandshakeAsClient failed\n");
+                throw std::runtime_error("attemptHandshake failed\n");
+            } else {
+                BaseTypes::Certificate cert = data.socket.first.get()->getPeerCertificate();
+                this->afterHandshake(appId, sessionId, cert);
             }
             data.socket.second = SocketState::AFTER_HANDSHAKE;
         }
@@ -147,10 +150,39 @@ void SecureSessionTLS::SecSessDeactivateRequest(
     // TODO: delete all state relevant to new sessions
 }
 
+void SecureSessionTLS::getAuthState(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)
+{
+    std::cerr << "SecureSessionTLS::getAuthState\n";
+
+    key_t key{appId, sessionId};
+    auto it = data_.find(key);
+    if (it == data_.end()) {
+        throw std::runtime_error("SecureSessionTLS::getAuthState - no matching socket found");
+    }
+
+    auto& sessionData = it->second;
+    BaseTypes::CredentialBasedAuthState authState;
+    SocketWithState& sock = sessionData.socket;
+    if (sessionData.role == BaseTypes::Role::SERVER) {
+        if (sessionData.clientSockets.size() == 0) {
+            throw std::runtime_error("SecureSessionTLS::getAuthState - no client sockets available");
+        }
+        // TODO: now just use the first socket
+        sock = sessionData.clientSockets[0];
+    }
+    if (sock.second != SocketState::AFTER_HANDSHAKE) {
+        throw std::runtime_error("SecureSessionTLS::getAuthState - invalid socket state " + std::to_string(static_cast<int>(sock.second)));
+    }
+    authState = sock.first->getPeerAuthState();
+    call_function_wptr(secSubSecureSessionAPI, [&](std::shared_ptr<SecSubSecureSessionAPI> sptr) {
+        sptr->getAuthStateReply(appId, sessionId, authState);
+    });
+}
+
 void SecureSessionTLS::afterHandshake(const BaseTypes::AppId& appId, 
         const BaseTypes::SessionId& sessionId, const BaseTypes::Certificate& cert)
 {
-    call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
+    call_function_wptr(secSubSecureSessionAPI, [&](std::shared_ptr<SecSubSecureSessionAPI>& sptr) {
         sptr->SecSessionStartIndication(appId, sessionId, cert);
     });
 }
@@ -160,7 +192,7 @@ void SecureSessionTLS::afterHandshake()
     BaseTypes::AppId appId = 1;
     BaseTypes::SessionId sessionId = 1;
     BaseTypes::Certificate cert = {0x01, 0x03, 0x05, 0x06};
-    call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
+    call_function_wptr(secSubSecureSessionAPI, [&](std::shared_ptr<SecSubSecureSessionAPI>& sptr) {
         sptr->SecSessionStartIndication(appId, sessionId, cert);
     });
 }
@@ -179,7 +211,7 @@ void SecureSessionTLS::sessionTerminated()
 {
     BaseTypes::AppId appId(16);
     BaseTypes::SessionId sessionId(8);
-    call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
+    call_function_wptr(secSubSecureSessionAPI, [&](std::shared_ptr<SecSubSecureSessionAPI>& sptr) {
         sptr->SecSessEndSessionIndication(appId, sessionId);
     });
 }

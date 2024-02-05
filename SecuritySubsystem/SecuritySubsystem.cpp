@@ -39,8 +39,10 @@ void SecuritySubsystem::SecSessionStartIndication(
     std::cerr << "SecuritySubsystem::SecSessStartIndication" << "\n";
     // TODO: check access control policy
     // Access control policy == SUCCESS
-    if (true /* role == SERVER */) {
-        //AppSecStartSessionIndication
+    if (role_ == BaseTypes::Role::SERVER) {
+        call_function_wptr(appSecuritySubsystemAPI, [&](std::shared_ptr<AppSecuritySubsystemAPI>& sptr) {
+            sptr->AppSecStartSessionIndictation(appId, sessId);
+        }); 
     }
     // Access control policy == More authentication required
     // ????
@@ -58,6 +60,7 @@ void SecuritySubsystem::AppSecConfigureRequest(
         const BaseTypes::CryptomaterialHandle &cryptomaterialHandle)
 {
     std::cerr << "SecuritySubsystemAppAPI::AppSecConfigureRequest " << "AID " << appId << "\n";
+    role_ = role;
     AppSecConfigureConfirmResult result = AppSecConfigureConfirmResult::SUCCESS;
     if (proxied) {
         std::cerr << "unsupported proxied value : True\n";
@@ -112,11 +115,10 @@ void SecuritySubsystem::AppSecDataRequest(
     std::cerr << "SecuritySubsystem::AppSecDataRequest " << appId << "\n";
     Asn1Helpers::Ieee1609Dot2Data signedData(std::integral_constant<Asn1Helpers::Ieee1609Dot2Data::type, Asn1Helpers::Ieee1609Dot2Data::type::NOTHING>{});
     // Call SecEnt to sign the data
-    BaseTypes::Time32 genTime = 0xFFFFFF;
-    Asn1Helpers::HeaderInfo hdrInfo(appId, genTime);
+    Asn1Helpers::HeaderInfo hdrInfo(signingParams.aid);
     Asn1Helpers::ToBeSignedData tbsData(std::move(hdrInfo), data);
 
-    SecEnt::SigningStatus signStatusInternal = secEntComm_.signData(tbsData, cryptoHandle, signedData);
+    SecEnt::SigningStatus signStatusInternal = secEntComm_.signData(tbsData, signingParams.certId, signedData);
     SecuritySubsystemAppAPI::AppSecDataConfirmResult result 
         = SecuritySubsystemAppAPI::AppSecDataConfirmResult::SUCCESS;
     if (signStatusInternal != SecEnt::SigningStatus::OK) {
@@ -275,15 +277,42 @@ void SecuritySubsystem::SecSessDeactivateConfirm()
     std::cerr << "SecuritySubsystem::SecSessDeactivateConfirm\n";
 }
 
-void SecuritySubsystem::SecAuthStateRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId, const BaseTypes::DateAndTime &notBefore, const BaseTypes::Location &location)
+void SecuritySubsystem::getAuthStateReply(const BaseTypes::AppId &appid, const BaseTypes::SessionId &sessionId, 
+        const BaseTypes::CredentialBasedAuthState &authState)
+{
+    std::cerr << "SecuritySubsystem::getAuthStateReply\n";
+    std::cerr << appid << " : " << sessionId <<  " CredentialBasedAuthState: " << authState.aid << " | " 
+            << hex_string(authState.ssp) << " | " << hex_string(authState.certId) << " | " << authState.receptionTime << "\n";
+    if (this->authStateCb_) {
+        this->authStateCb_(appid, sessionId, authState);
+    }
+}
+
+void SecuritySubsystem::SecAuthStateRequest(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId,
+        const BaseTypes::DateAndTime &notBefore,
+        const BaseTypes::Location &location)
 {
     std::cerr << "SecuritySubsystem::SecAuthStateRequest\n";
+    BaseTypes::CredentialBasedAuthState state;
+    BaseTypes::DateAndTime receptionTime = "now";
+    call_function_wptr(secSessAPI, [&](std::shared_ptr<SecureSessionSecSubAPI> sptr){
+        sptr->getAuthState(appId, sessionId);
+    });
+    this->SecAuthStateConfirm(appId, sessionId, state, receptionTime);
 
 }
 
-void SecuritySubsystem::SecAuthStateConfirm(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId, const BaseTypes::CredentialBasedAuthState &credentialBasedAuthState, const BaseTypes::DateAndTime &receptionTime)
+void SecuritySubsystem::SecAuthStateConfirm(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId,
+        const BaseTypes::CredentialBasedAuthState &credentialBasedAuthState,
+        const BaseTypes::DateAndTime &receptionTime)
 {
     std::cerr << "SecuritySubsystem::SecAuthStateConfirm\n";
+    std::cerr << appId << " " << sessionId << " " << credentialBasedAuthState.aid << " " << hex_string(credentialBasedAuthState.certId) << "\n";
+}
+
+void SecuritySubsystem::registerAuthStateCallback(AuthStateCallback_t authCb)
+{
+    this->authStateCb_ = authCb;
 }
 
 void SecuritySubsystem::sendAccessControlPdu()

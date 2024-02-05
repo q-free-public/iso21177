@@ -40,7 +40,7 @@ void SecureSession::SecSessConfigureRequest(
         key_t key(appId, sessionId);
         if (role == BaseTypes::Role::CLIENT) {
             data.socket.first->connectToServer();
-            data.socket.first->attemptHandshakeAsClient(appId, cryptomaterialHandle);
+            data.socket.first->attemptHandshake(appId, cryptomaterialHandle);
             //attemptHandshake(appId, sessionId);
             data.socket.second = SocketState::BEFORE_HANDSHAKE;
             // TODO: for now we assume that client handshake always works
@@ -137,6 +137,11 @@ void SecureSession::SecSessDeactivateRequest(
     // TODO: IF client -> stop attempting new outgoing connections
     
     // TODO: delete all state relevant to new sessions
+}
+
+void SecureSession::getAuthState(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId)
+{
+    std::cerr << "SecureSession::getAuthState\n"; 
 }
 
 void SecureSession::afterHandshake()

@@ -144,12 +144,11 @@ void ApplicationTLS::sendDataUnsecured(const BaseTypes::Data& data)
     });
 }
 
-void ApplicationTLS::sendDataSecured(const BaseTypes::Data &data)
+void ApplicationTLS::sendDataSecured(const BaseTypes::Data& data, const BaseTypes::SigningParameters& signParams)
 {
     if (!data_) {
         throw std::runtime_error("Application uninitialized");
     }
-    BaseTypes::SigningParameters signParams = "no-params";
     call_function_wptr(this->secSubsystemAppAPI, [&](std::shared_ptr<SecuritySubsystemAppAPI> sptr) {
         sptr->AppSecDataRequest(this->data_->appId, this->data_->sessionId, this->data_->cryptoHandle,
                 data, signParams);

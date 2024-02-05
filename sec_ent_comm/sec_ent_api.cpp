@@ -22,7 +22,7 @@ VerificationStatus SecEntCommunicator::verifyIeee1609Dot2DataSigned(const Asn1He
         sec_ent_msg_verify_reply repl = send_recv<sec_ent_msg_verify_reply>(comm_.get_sock(), req);
         return VerificationStatus::OK;
     } catch (const std::exception& e) {
-        std::cerr << "signing failed: " << e.what() << "\n";
+        std::cerr << "verification of signing failed: " << e.what() << "\n";
     }
     return VerificationStatus::FAILED;
 

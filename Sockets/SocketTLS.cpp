@@ -20,41 +20,6 @@ SocketTLS::~SocketTLS()
 {
 }
 
-bool SocketTLS::attemptHandshakeAsClient(const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle)
-{
-    std::cerr << "SocketTLS::attemptHandshakeAsClient\n";
-    ssl_ = SSL_Wrapper(this->ssl_ctx_);
-    if (!*ssl_) {
-        fprintf(stderr, "SSL_new failed\n");
-        return false;
-    }
-    if (!SSL_set_1609_sec_ent_addr(*ssl_, SecEntData::sec_ent_port, SecEntData::sec_ent_ip)) {
-        fprintf(stderr, "SSL_set_1609_sec_ent_addr failed\n");
-        ERR_print_errors_fp(stderr);
-        return false;
-    }
-    int server_support = SSL_RFC8902_1609 | SSL_RFC8902_X509;
-    int client_support = SSL_RFC8902_1609 | SSL_RFC8902_X509;
-    bool force_x509 = false;
-    if (force_x509) {
-        server_support = SSL_RFC8902_X509;
-    }
-    if (!this->ssl_set_RFC8902_values(server_support, client_support, appId, clientHandle)) {
-        return false;
-    }
-    if (!SSL_set_fd(*ssl_, socketBase_->getFd())) {
-        fprintf(stderr, "SSL_set_fd failed\n");
-        return false;
-    }
-    std::cerr << "Will connect \n";
-    if (SSL_connect(*ssl_) <= 0) {
-        ERR_print_errors_fp(stderr);
-        fprintf(stderr, "SSL_connect failed\n");
-        return false;
-    }
-    return true;
-}
-
 int SocketTLS::getData(std::vector<uint8_t> &data)
 {
     int received;
@@ -123,12 +88,80 @@ int SocketTLS::getFd()
     return socketBase_->getFd();
 }
 
+bool SocketTLS::attemptHandshake(const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle)
+{
+    std::cerr << "SocketTLS::attemptHandshake\n";
+
+    ssl_ = SSL_Wrapper(this->ssl_ctx_);
+    if (!*ssl_) {
+        fprintf(stderr, "SSL_new failed\n");
+        return false;
+    }
+    if (!SSL_set_1609_sec_ent_addr(*ssl_, SecEntData::sec_ent_port, SecEntData::sec_ent_ip)) {
+        fprintf(stderr, "SSL_set_1609_sec_ent_addr failed\n");
+        ERR_print_errors_fp(stderr);
+        return false;
+    }
+    int server_support = SSL_RFC8902_1609 | SSL_RFC8902_X509;
+    int client_support = SSL_RFC8902_1609 | SSL_RFC8902_X509;
+    bool force_x509 = false;
+    if (force_x509) {
+        server_support = SSL_RFC8902_X509;
+    }
+    if (!this->ssl_set_RFC8902_values(server_support, client_support, appId, clientHandle)) {
+        return false;
+    }
+    if (!SSL_set_fd(*ssl_, this->getFd())) {
+        fprintf(stderr, "SSL_set_fd failed\n");
+        return false;
+    }
+
+    this->setStateSSL();
+    std::cerr << "SSL_do_handshake is_server? " << SSL_is_server(*ssl_) << "\n";
+    int retval = SSL_do_handshake(*ssl_);
+    if (retval <= 0) {
+        fprintf(stderr, "SSL_do_handshake failed ssl_err=%d errno=%s\n",
+                SSL_get_error(*ssl_, retval), strerror(errno));
+        ERR_print_errors_fp(stderr);
+        return false;
+    }
+    std::cerr << "SSL string " << SSL_state_string_long(*ssl_) << "\n";
+    SSL_SESSION_print_fp(stderr, SSL_get_session(*ssl_));
+    std::cerr << "SSL_do_handshake done\n";
+
+    uint64_t psid;
+	size_t ssp_len;
+	uint8_t *ssp = NULL;
+    std::array<uint8_t, CERT_HASH_LEN> hashed_id;
+	if(SSL_get_1609_psid_received(*ssl_, &psid, &ssp_len, &ssp, hashed_id.data()) <= 0) {
+		ERR_print_errors_fp(stderr);
+		fprintf(stderr, "SSL_get_1609_psid_received failed\n");
+		return false;
+	}
+    std::vector<uint8_t> cert(hashed_id.begin(), hashed_id.end());
+    std::vector<uint8_t> ssp_vector(ssp, ssp + ssp_len);
+    this->setPeerCertificate(cert);
+    this->peerAuthState_ = std::make_shared<BaseTypes::CredentialBasedAuthState>(
+        BaseTypes::CredentialBasedAuthState{psid, ssp_vector, hashed_id, "currrent-time"}
+    );
+
+    return true;
+}
+
 BaseTypes::Certificate SocketTLS::getPeerCertificate()
 {
     if (!peerCert_) {
         throw std::runtime_error("No peer certificate present");
     }
     return *peerCert_;
+}
+
+BaseTypes::CredentialBasedAuthState SocketTLS::getPeerAuthState()
+{
+    if (!peerAuthState_) {
+        throw std::runtime_error("No peer auth state present");
+    }
+    return *peerAuthState_;
 }
 
 void SocketTLS::setPeerCertificate(const BaseTypes::Certificate &cert)

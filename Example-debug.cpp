@@ -83,13 +83,14 @@ int main() {
     // Sign data before sending 
     // (it is also possible to send data without signing)
     std::cerr << "=====> App Signing data\n";
+    BaseTypes::SigningParameters signParams = {36};
     appEx->executeWithSecAPI([&](SecuritySubsystemAppAPI& secAPI){
         secAPI.AppSecDataRequest(
             appId,
             sessionIdServer,
             cryptoHandle,
             {0x05, 0x06, 0x07, 0x08},
-            "signing params"
+            signParams
         );
     });
 

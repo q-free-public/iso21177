@@ -20,9 +20,10 @@ bool OptionParsing::parseOptions(int argc, const char *argv[])
             ("se-port", boost::program_options::value<int>(&sec_ent_port)->default_value(3999), "Security entity port number")
             ("rfc8902-aid", boost::program_options::value<uint64_t>(&rfc_8902_AID)->default_value(36), "Specify AID to use for RFC8902")
             ("rfc8902-cert", boost::program_options::value<std::string>(&rfc_8902_CERT), "Specify certificate hash for RFC8902(if not specified current AT is used)")
-            ("rfc8902-cert", boost::program_options::value<std::string>(&rfc_8902_CERT), "Specify certificate hash for RFC8902(if not specified current AT is used)")
             ("app-port", boost::program_options::value<int>(&application_port)->default_value(2337), "Specify port for the application to use")
-            ("iso21177-sessionId", boost::program_options::value<int>(&sessionId)->default_value(456), "Specify port for the application to use");
+            ("iso21177-sessionId", boost::program_options::value<int>(&sessionId)->default_value(456), "Specify port for the application to use")
+            ("iso21177-aid", boost::program_options::value<uint64_t>(&message_signing_AID)->default_value(36), "Specify AID for message signing")
+            ("iso21177-cert", boost::program_options::value<std::string>(&message_signing_CERT), "Specify certificate hash for message signing (if not specified same as for RFC 8902 is used)");
 
         boost::program_options::variables_map vm;
         boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc_), vm);
@@ -86,4 +87,19 @@ uint64_t OptionParsing::getRfc8902AID()
 int OptionParsing::getIso2177SessionId()
 {
     return sessionId;
+}
+
+uint64_t OptionParsing::getMessageSigningAID()
+{
+    return message_signing_AID;
+}
+
+std::string OptionParsing::getMessageSigningCert()
+{
+    return message_signing_CERT;
+}
+
+bool OptionParsing::getMessageSigningCertUseDefault()
+{
+    return false;
 }

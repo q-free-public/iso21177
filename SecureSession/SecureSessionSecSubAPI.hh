@@ -21,6 +21,11 @@ public:
 
     virtual void SecSessDeactivateConfirm() = 0;
 
+    virtual void getAuthStateReply(
+        const BaseTypes::AppId& appid,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::CredentialBasedAuthState& authState
+        ) = 0;
 };
 
 class SecureSessionSecSubAPI {
@@ -52,6 +57,7 @@ public:
     ) = 0;
 
     virtual void registerSecSubSecureSessionAPI(std::weak_ptr<SecSubSecureSessionAPI> ptr);
+    virtual void getAuthState(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId) = 0;
 
 protected:
     std::weak_ptr<SecSubSecureSessionAPI> secSubSecureSessionAPI;

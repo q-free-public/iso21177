@@ -78,6 +78,12 @@ public:
 
     virtual void SecSessDeactivateConfirm();
 
+    virtual void getAuthStateReply(
+        const BaseTypes::AppId& appid,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::CredentialBasedAuthState& authState
+    );
+
     virtual void SecAuthStateRequest(
         const BaseTypes::AppId& appId,
         const BaseTypes::SessionId& sessionId,
@@ -92,6 +98,16 @@ public:
         const BaseTypes::DateAndTime& receptionTime
     );
 
+    typedef std::function<void(
+        const BaseTypes::AppId& appid,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::CredentialBasedAuthState& authState
+    )> AuthStateCallback_t;
+
+    virtual void registerAuthStateCallback(
+        AuthStateCallback_t authCb
+    );
+
     virtual void sendAccessControlPdu();
 
     virtual void forceEndSession(
@@ -104,5 +120,7 @@ public:
 private:
     std::weak_ptr<AdaptorLayerSecSubAPI> alAPI;
     std::weak_ptr<SecureSessionSecSubAPI> secSessAPI;
+    BaseTypes::Role role_;
     SecEnt::SecEntCommunicator& secEntComm_;
+    AuthStateCallback_t authStateCb_;
 };

@@ -22,6 +22,8 @@ int main(int argc, const char *argv[]) {
     SecEnt::SecEntCommunicator secEntComm(options.getSecEntHost(), options.getSecEntPort());
     std::shared_ptr<ApplicationTLS> appTls = std::make_shared<ApplicationTLS>();
     std::shared_ptr<SecureSessionTLS> secSess = std::make_shared<SecureSessionTLS>();
+    std::shared_ptr<SecuritySubsystem> secSub = std::make_shared<SecuritySubsystem>(secEntComm);
+    std::shared_ptr<AdaptorLayer> adaptorLayer = std::make_shared<AdaptorLayer>();
 
     BaseTypes::CryptomaterialHandle cryptoHandle = BaseTypes::CryptomaterialHandle(parse_hex_array<8>(options.getRfc8902Cert()));
     if (options.getRfc8902UseAT()) {
@@ -33,6 +35,8 @@ int main(int argc, const char *argv[]) {
     AppFullInstance appClient(
         secEntComm, 
         secSess,
+        secSub,
+        adaptorLayer,
         appTls);
 
     BaseTypes::SessionId sessionId = options.getIso2177SessionId();
@@ -45,6 +49,12 @@ int main(int argc, const char *argv[]) {
         std::cerr << "Failed to configure " << e.what() << "\n";
         return 1;
     }
+    BaseTypes::HashedId8 signingCert = cryptoHandle;
+    if (options.getMessageSigningCert().size() != 0) {
+        signingCert = (parse_hex_array<8>(options.getMessageSigningCert()));
+    }
+    BaseTypes::DateAndTime notBefore = "not-used";
+    BaseTypes::Location location = "not-used";
     // appClient.configureApplication(456, BaseTypes::Role::CLIENT);
     auto dataRecvCbFn = [](const std::vector<uint8_t>& data, SecuritySubsystemAppAPI::AppSecIncomingConfirmResult result) {
         std::cerr << "Data Received callback \n";
@@ -53,7 +63,18 @@ int main(int argc, const char *argv[]) {
         std::cerr << hex_string(parsed_data.getPayload()) << "\n";
     };
     appTls->registerDataReceivedCallback(dataRecvCbFn);
-    // Now client sends data
+    auto authStateCb = [](const BaseTypes::AppId& appid,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::CredentialBasedAuthState& authState) {
+            std::cerr << "authStateCb\n";
+            std::cerr << appid << " : " << sessionId << " CredentialBasedAuthState: " 
+            << authState.aid << " | " 
+            << hex_string(authState.ssp) << " | " 
+            << hex_string(authState.certId) << " | " 
+            << authState.receptionTime << "\n";
+    };
+    secSub->registerAuthStateCallback(authStateCb);
+    secSub->SecAuthStateRequest(appId, sessionId, notBefore, location);
     std::cerr << "=> Type data to send, type exit to quit\n";
     std::cerr << "=> if 1st character is 1, the non-repudiation is applied (signing), otherwise not\n";
     for (std::string line; std::getline(std::cin, line);) {
@@ -69,8 +90,10 @@ int main(int argc, const char *argv[]) {
                     sendSecure = true;
                 }
             }
+            // Now client sends data
             if (sendSecure) {
-                appTls->sendDataSecured(clientMessage);
+                BaseTypes::SigningParameters signParams = {options.getMessageSigningAID(), signingCert};
+                appTls->sendDataSecured(clientMessage, signParams);
             } else {
                 appTls->sendDataUnsecured(clientMessage);
             }

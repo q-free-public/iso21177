@@ -126,7 +126,7 @@ void AppFullInstance::sendData(BaseTypes::Data &data, bool send_secure)
         return;
     }
     if (send_secure) {
-        BaseTypes::SigningParameters signParams = "no-params";
+        BaseTypes::SigningParameters signParams = {36};
         call_function_wptr(appEx->secSubsystemAppAPI, [&](std::shared_ptr<SecuritySubsystemAppAPI> sptr) {
             sptr->AppSecDataRequest(this->data_->appId, this->data_->sessionId, this->data_->cryptoHandle,
                     data, signParams);

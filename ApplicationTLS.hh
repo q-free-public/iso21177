@@ -55,7 +55,7 @@ public:
         BaseTypes::AppId appId, BaseTypes::CryptomaterialHandle cryptoHandle
     );
     void sendDataUnsecured(const BaseTypes::Data& data);
-    void sendDataSecured(const BaseTypes::Data& data);
+    void sendDataSecured(const BaseTypes::Data& data, const BaseTypes::SigningParameters& signParams);
     typedef std::function<void(const std::vector<uint8_t>&, SecuritySubsystemAppAPI::AppSecIncomingConfirmResult)> DataRecvCb_t;
     void registerDataReceivedCallback(DataRecvCb_t dataRecvCb);
 

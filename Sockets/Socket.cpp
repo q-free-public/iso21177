@@ -11,9 +11,9 @@ Socket::Socket(const Socket &s)
 {
 }
 
-bool Socket::attemptHandshakeAsClient(const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle)
+bool Socket::attemptHandshake(const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle)
 {
-    std::cerr << "Default socket implementation : Socket::attemptHandshakeAsClient\n";
+    std::cerr << "Default socket implementation : Socket::attemptHandshake\n";
     return true;
 }
 

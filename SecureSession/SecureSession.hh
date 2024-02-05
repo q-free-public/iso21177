@@ -49,6 +49,8 @@ public:
         const BaseTypes::SecureSessionInstanceId& secSessInstanceId
     );
 
+    virtual void getAuthState(const BaseTypes::AppId &appId, const BaseTypes::SessionId &sessionId);
+
     // This should be triggered by TLS handshake completion
     virtual void afterHandshake();
     // This is what comes from a socket

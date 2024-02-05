@@ -17,9 +17,9 @@ public:
     virtual std::unique_ptr<Socket> acceptClientConnection();
     virtual std::unique_ptr<SocketTLS> acceptClientConnectionTLS();
     virtual void connectToServer();
-    virtual bool attemptHandshakeAsClient(const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle);
     virtual bool checkHandshakeAsServer();
     virtual void closeSocket();
+    virtual void setStateSSL();
 private:
     const BaseTypes::AppId appId_;
     const BaseTypes::CryptomaterialHandle cryptoHandle_;

@@ -17,13 +17,15 @@ public:
     virtual std::unique_ptr<Socket> acceptClientConnection();
     virtual std::unique_ptr<SocketTLS> acceptClientConnectionTLS() = 0;
     virtual void connectToServer();
-    virtual bool attemptHandshakeAsClient(const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle);
     virtual bool checkHandshakeAsServer() = 0;
     virtual int getData(std::vector<uint8_t>& data);
     virtual int sendData(const std::vector<uint8_t>& data);
     virtual void closeSocket();
     virtual int getFd();
+    virtual void setStateSSL() = 0;
+    bool attemptHandshake(const BaseTypes::AppId &appId, const BaseTypes::CryptomaterialHandle &clientHandle);
     virtual BaseTypes::Certificate getPeerCertificate();
+    virtual BaseTypes::CredentialBasedAuthState getPeerAuthState();
 protected:
     virtual void setPeerCertificate(const BaseTypes::Certificate& cert);
     int ssl_set_RFC8902_values(int server_support, int client_support,
@@ -32,6 +34,7 @@ protected:
     SSL_CTX_Wrapper ssl_ctx_;
     SSL_Wrapper ssl_;
     std::shared_ptr<BaseTypes::Certificate> peerCert_;
+    std::shared_ptr<BaseTypes::CredentialBasedAuthState> peerAuthState_;
 private:
     std::shared_ptr<Socket> socketBase_;
     std::unique_ptr<int> x_;

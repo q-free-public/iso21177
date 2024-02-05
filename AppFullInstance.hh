@@ -18,7 +18,6 @@ public:
         std::shared_ptr<SecureSession> secSession,
         std::shared_ptr<ApplicationElementI> app
     );
-private:
     AppFullInstance(
         SecEnt::SecEntCommunicator& secEntComm,
         std::shared_ptr<SecureSession> secSession,
