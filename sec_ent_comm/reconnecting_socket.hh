@@ -3,6 +3,7 @@
 #include <boost/asio.hpp>
 
 using boost::asio::ip::tcp;
+#include <iostream>
 
 #define SEC_ENT_ADDR "localhost"
 #define SEC_ENT_PORT 3912
@@ -13,7 +14,6 @@ public:
 	: io_service_(io_service)
 	, port_(port)
 	, ip_(ip) {
-		reconnect();
 	};
 
 	void reconnect() {
@@ -25,6 +25,7 @@ public:
 		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
 		socket_.reset(new tcp::socket(io_service_));
+		std::cerr << "Connect\n";
 		boost::asio::connect(*socket_, endpoint_iterator);
 	}
 
