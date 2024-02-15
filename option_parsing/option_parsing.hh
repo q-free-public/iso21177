@@ -19,6 +19,7 @@ public:
     uint64_t getMessageSigningAID();
     std::string getMessageSigningCert();
     bool getMessageSigningCertUseDefault();
+    bool getVerbose();
 private:
     bool help_needed;
     std::string sec_ent_host;
@@ -30,6 +31,7 @@ private:
     std::string message_signing_CERT;
     uint64_t message_signing_AID;
     int sessionId;
+    bool verbose;
 
     boost::program_options::options_description desc_;
 };

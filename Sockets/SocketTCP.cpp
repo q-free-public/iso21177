@@ -134,6 +134,7 @@ std::unique_ptr<Socket> SocketTCP::acceptClientConnection()
     }
     struct sockaddr_in addr;
     unsigned int len = sizeof(addr);
+    std::cerr << "accept " << getFd() << "\n";
     int client = accept(getFd(), (struct sockaddr*)&addr, &len);
     if (client < 0) {
         perror("accept");
@@ -149,7 +150,7 @@ int SocketTCP::sendData(const std::vector<uint8_t> &data)
 void SocketTCP::closeSocket()
 {
     if (this->sock_) {
-        std::cerr << "Closing socket\n";
+        std::cerr << "!!!!!!!!!!!Closing socket: " << getFd() << "\n";
         close(getFd());
         this->sock_.reset();
     }

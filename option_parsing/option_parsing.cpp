@@ -23,7 +23,8 @@ bool OptionParsing::parseOptions(int argc, const char *argv[])
             ("app-port", boost::program_options::value<int>(&application_port)->default_value(2337), "Specify port for the application to use")
             ("iso21177-sessionId", boost::program_options::value<int>(&sessionId)->default_value(456), "Specify port for the application to use")
             ("iso21177-aid", boost::program_options::value<uint64_t>(&message_signing_AID)->default_value(36), "Specify AID for message signing")
-            ("iso21177-cert", boost::program_options::value<std::string>(&message_signing_CERT), "Specify certificate hash for message signing (if not specified same as for RFC 8902 is used)");
+            ("iso21177-cert", boost::program_options::value<std::string>(&message_signing_CERT), "Specify certificate hash for message signing (if not specified same as for RFC 8902 is used)")
+            ("verbose,v", boost::program_options::value<bool>(&verbose)->default_value(false), "Verbose output");
 
         boost::program_options::variables_map vm;
         boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc_), vm);
@@ -102,4 +103,9 @@ std::string OptionParsing::getMessageSigningCert()
 bool OptionParsing::getMessageSigningCertUseDefault()
 {
     return false;
+}
+
+bool OptionParsing::getVerbose()
+{
+    return verbose;
 }

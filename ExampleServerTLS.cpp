@@ -24,6 +24,8 @@ int main(int argc, const char *argv[]) {
 
     std::shared_ptr<ApplicationTLS> appTls = std::make_shared<ApplicationTLS>();
     std::shared_ptr<SecureSessionTLS> secSess = std::make_shared<SecureSessionTLS>(secEntComm);
+    std::shared_ptr<SecuritySubsystem> secSub = std::make_shared<SecuritySubsystem>(secEntComm);
+    std::shared_ptr<AdaptorLayer> adaptorLayer = std::make_shared<AdaptorLayer>();
 
     BaseTypes::CryptomaterialHandle cryptoHandle = BaseTypes::CryptomaterialHandle(parse_hex_array<8>(options.getRfc8902Cert()));
     if (options.getRfc8902UseAT()) {
@@ -35,6 +37,8 @@ int main(int argc, const char *argv[]) {
     AppFullInstance appServ(
         secEntComm,
         secSess,
+        secSub,
+        adaptorLayer,
         appTls);
 
     BaseTypes::SessionId sessionId = options.getIso2177SessionId();;
@@ -46,6 +50,7 @@ int main(int argc, const char *argv[]) {
     if (options.getMessageSigningCert().size() != 0) {
         signingCert = (parse_hex_array<8>(options.getMessageSigningCert()));
     }
+
     auto dataRecvCbFn = [&](const std::vector<uint8_t>& data, SecuritySubsystemAppAPI::AppSecIncomingConfirmResult result) {
         std::cerr << "Data Received callback \n";
         Asn1Helpers::Ieee1609Dot2Data parsed_data(data);
@@ -67,6 +72,23 @@ int main(int argc, const char *argv[]) {
         
     };
     appTls->registerDataReceivedCallback(dataRecvCbFn);
+
+    auto authStateCb = [](const BaseTypes::AppId& appid,
+        const BaseTypes::SessionId& sessionId,
+        const BaseTypes::CredentialBasedAuthState& authState) {
+            std::cerr << "authStateCb\n";
+            std::cerr << appid << " : " << sessionId << " CredentialBasedAuthState: " 
+            << authState.aid << " | " 
+            << hex_string(authState.ssp) << " | " 
+            << hex_string(authState.certId) << " | " 
+            << authState.receptionTime << "\n";
+    };
+    secSub->registerAuthStateCallback(authStateCb);
+    BaseTypes::DateAndTime notBefore = "not-used";
+    BaseTypes::Location location = "not-used";
+
+    
+
     while (true) {
         std::cerr << "====> Server will wait for incoming sessions\n";
         if (!secSess->waitForNetworkInput()) {
@@ -74,6 +96,7 @@ int main(int argc, const char *argv[]) {
             continue;
         }
         std::cerr << "Client connected to the server\n";
+        secSub->SecAuthStateRequest(appId, sessionId, notBefore, location);
         while (true) {
             std::cerr << "====> Server wil receive data\n";
             if (!secSess->waitForNetworkInput()) {

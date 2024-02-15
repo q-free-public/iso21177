@@ -56,13 +56,15 @@ int main(int argc, const char *argv[]) {
     BaseTypes::DateAndTime notBefore = "not-used";
     BaseTypes::Location location = "not-used";
     // appClient.configureApplication(456, BaseTypes::Role::CLIENT);
+
     auto dataRecvCbFn = [](const std::vector<uint8_t>& data, SecuritySubsystemAppAPI::AppSecIncomingConfirmResult result) {
         std::cerr << "Data Received callback \n";
         Asn1Helpers::Ieee1609Dot2Data parsed_data(data);
         parsed_data.debugPrint();
-        std::cerr << hex_string(parsed_data.getPayload()) << "\n";
+        std::cerr << "verification: " << static_cast<uint8_t>(result) << " " << hex_string(parsed_data.getPayload()) << "\n";
     };
     appTls->registerDataReceivedCallback(dataRecvCbFn);
+
     auto authStateCb = [](const BaseTypes::AppId& appid,
         const BaseTypes::SessionId& sessionId,
         const BaseTypes::CredentialBasedAuthState& authState) {
@@ -74,6 +76,7 @@ int main(int argc, const char *argv[]) {
             << authState.receptionTime << "\n";
     };
     secSub->registerAuthStateCallback(authStateCb);
+    
     secSub->SecAuthStateRequest(appId, sessionId, notBefore, location);
     std::cerr << "=> Type data to send, type exit to quit\n";
     std::cerr << "=> if 1st character is 1, the non-repudiation is applied (signing), otherwise not\n";
@@ -83,7 +86,7 @@ int main(int argc, const char *argv[]) {
             break;
         }
         try {
-            BaseTypes::Data clientMessage(line.begin(), line.end());
+            std::vector<uint8_t> clientMessage(line.begin(), line.end());
             bool sendSecure = false;
             if (line.size() > 0) {
                 if (line[0] == '1') {

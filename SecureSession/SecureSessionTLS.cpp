@@ -113,6 +113,7 @@ void SecureSessionTLS::ALSessEndSessionRequest(const BaseTypes::AppId &appId, co
     std::cerr << "SecureSessionTLS::ALSessEndSessionRequest" << "\n";
     if (data_.size() != 1) {
         std::cerr << "No sessions registered, exiting\n";
+        return;
     }
     auto it = data_.begin();
     //TODO: End session if supported in protocol
@@ -227,6 +228,7 @@ bool SecureSessionTLS::waitForNetworkInput()
 
     if (data_.size() != 1) {
         std::cerr << "No sessions registered, exiting\n";
+        return false;
     }
     auto it = data_.begin();
     // in server case - we wait for clients here
@@ -247,6 +249,7 @@ bool SecureSessionTLS::waitForNetworkInput()
                 call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
                     sptr->SecSessEndSessionIndication(it->first.first, it->first.second);
                 });
+                return false;
             };
         break;
     }
@@ -288,10 +291,11 @@ bool SecureSessionTLS::waitForNetworkInput()
                 std::cerr << "Socket is closed on the other side\n";
                 sockWithStatePtr->second = SocketState::OTHER_SIDE_CLOSED;
                 // Accepted socket is opened here, will be closed when ptr is destroyed
-                it->second.clientSockets.erase(sockWithStatePtr);
+                //it->second.clientSockets.erase(sockWithStatePtr);
                 call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
                     sptr->SecSessEndSessionIndication(it->first.first, it->first.second);
                 });
+                return false;
             };
         } else {
             std::cerr << "More than one client connected, this should not happen\n";
