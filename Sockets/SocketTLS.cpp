@@ -18,6 +18,7 @@ SocketTLS::SocketTLS(std::shared_ptr<Socket> s, const std::string& host, int por
 
 SocketTLS::~SocketTLS()
 {
+        std::cerr << "SocketTLS::~SocketTLS\n";
 }
 
 int SocketTLS::getData(std::vector<uint8_t> &data)

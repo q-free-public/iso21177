@@ -9,7 +9,7 @@
 class SocketTCP : public Socket {
 public:
     SocketTCP(Socket::Type type, int port);
-    ~SocketTCP();
+    virtual ~SocketTCP();
     virtual int getData(std::vector<uint8_t>& data);
     virtual void connectToServer();
     virtual std::unique_ptr<Socket> acceptClientConnection();

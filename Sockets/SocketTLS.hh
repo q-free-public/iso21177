@@ -13,7 +13,7 @@
 class SocketTLS : public Socket {
 public:
     SocketTLS(std::shared_ptr<Socket> s, const std::string& host, int port);
-    ~SocketTLS();
+    virtual ~SocketTLS();
     virtual std::unique_ptr<Socket> acceptClientConnection();
     virtual std::unique_ptr<SocketTLS> acceptClientConnectionTLS() = 0;
     virtual void connectToServer();

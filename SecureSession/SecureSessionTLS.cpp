@@ -165,18 +165,18 @@ void SecureSessionTLS::getAuthState(const BaseTypes::AppId &appId, const BaseTyp
 
     auto& sessionData = it->second;
     BaseTypes::CredentialBasedAuthState authState;
-    SocketWithState& sock = sessionData.socket;
+    SocketWithState *sock = &sessionData.socket;
     if (sessionData.role == BaseTypes::Role::SERVER) {
         if (sessionData.clientSockets.size() == 0) {
             throw std::runtime_error("SecureSessionTLS::getAuthState - no client sockets available");
         }
         // TODO: now just use the first socket
-        sock = sessionData.clientSockets[0];
+        sock = &sessionData.clientSockets[0];
     }
-    if (sock.second != SocketState::AFTER_HANDSHAKE) {
-        throw std::runtime_error("SecureSessionTLS::getAuthState - invalid socket state " + std::to_string(static_cast<int>(sock.second)));
+    if (sock->second != SocketState::AFTER_HANDSHAKE) {
+        throw std::runtime_error("SecureSessionTLS::getAuthState - invalid socket state " + std::to_string(static_cast<int>(sock->second)));
     }
-    authState = sock.first->getPeerAuthState();
+    authState = sock->first->getPeerAuthState();
     call_function_wptr(secSubSecureSessionAPI, [&](std::shared_ptr<SecSubSecureSessionAPI> sptr) {
         sptr->getAuthStateReply(appId, sessionId, authState);
     });
@@ -291,7 +291,7 @@ bool SecureSessionTLS::waitForNetworkInput()
                 std::cerr << "Socket is closed on the other side\n";
                 sockWithStatePtr->second = SocketState::OTHER_SIDE_CLOSED;
                 // Accepted socket is opened here, will be closed when ptr is destroyed
-                //it->second.clientSockets.erase(sockWithStatePtr);
+                it->second.clientSockets.erase(sockWithStatePtr);
                 call_function_wptr(secSubSecureSessionAPI, [&](auto sptr) {
                     sptr->SecSessEndSessionIndication(it->first.first, it->first.second);
                 });

@@ -12,6 +12,7 @@ public:
     enum class Type { SERVER, CLIENT};
     Socket(Type type);
     Socket(const Socket& s);
+    virtual ~Socket() = default;
     virtual int getData(std::vector<uint8_t>& data) = 0;
     virtual void connectToServer() = 0;
     virtual std::unique_ptr<Socket> acceptClientConnection() = 0;

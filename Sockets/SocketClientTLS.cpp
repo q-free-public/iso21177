@@ -15,6 +15,7 @@ SocketClientTLS::SocketClientTLS(std::shared_ptr<Socket> s, const std::string& h
 
 SocketClientTLS::~SocketClientTLS()
 {
+    std::cerr << "SocketClientTLS::~SocketClientTLS\n";
 }
 
 void SocketClientTLS::connectToServer()
